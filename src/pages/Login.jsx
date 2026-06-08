@@ -48,7 +48,7 @@ export default function Login() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-[14px] font-semibold text-[#6e7975]" htmlFor="password">Password</label>
-                <button type="button" className="text-[12px] font-semibold text-[#005344] hover:underline">Forgot Password?</button>
+                <button onClick={() => navigate('/forgot-password')} type="button" className="text-[12px] font-semibold text-[#005344] hover:underline">Forgot Password?</button>
               </div>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6e7975] text-[20px]">lock</span>

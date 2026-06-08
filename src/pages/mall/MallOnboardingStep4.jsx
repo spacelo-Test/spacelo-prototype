@@ -33,7 +33,7 @@ export default function MallOnboardingStep4() {
         {/* Progress Bar Section (Mobile Optimized) */}
         <section className="mb-8 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between relative px-2">
-            <div className="absolute top-5 left-0 w-full h-0.5 bg-[#bec9c4] -z-10"></div>
+            <div className="absolute top-5 left-8 right-8 h-0.5 bg-[#bec9c4] -z-10"></div>
             
             {/* Step 1: Done */}
             <div className="flex flex-col items-center bg-[#f7faf7] px-1">

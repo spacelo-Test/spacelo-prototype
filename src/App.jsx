@@ -4,6 +4,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom'
 import Register from './pages/Register'
 import Verify from './pages/Verify'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
 import MerchantOnboarding from './pages/merchant/MerchantOnboarding'
 import MerchantOnboardingStep2 from './pages/merchant/MerchantOnboardingStep2'
 import MerchantOnboardingStep3 from './pages/merchant/MerchantOnboardingStep3'
@@ -50,6 +51,7 @@ function App() {
             <Route path="/" element={<Register />} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/onboarding/merchant" element={<MerchantOnboarding />} />
             <Route path="/onboarding/merchant/step2" element={<MerchantOnboardingStep2 />} />
             <Route path="/onboarding/merchant/step3" element={<MerchantOnboardingStep3 />} />

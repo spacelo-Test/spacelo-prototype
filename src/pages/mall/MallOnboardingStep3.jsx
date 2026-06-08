@@ -27,7 +27,7 @@ export default function MallOnboardingStep3() {
         {/* Progress Bar Section (Mobile Optimized) */}
         <section className="mb-8 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between relative px-2">
-            <div className="absolute top-5 left-0 w-full h-0.5 bg-[#bec9c4] -z-10"></div>
+            <div className="absolute top-5 left-8 right-8 h-0.5 bg-[#bec9c4] -z-10"></div>
             
             {/* Step 1: Done */}
             <div className="flex flex-col items-center bg-[#f7faf7] px-1">
@@ -126,10 +126,7 @@ export default function MallOnboardingStep3() {
           </div>
         </section>
 
-        <button className="w-full flex items-center justify-center gap-2 bg-[#e0e3e0] text-[#181c1b] font-bold py-3 rounded-lg hover:bg-[#bec9c4] transition-all">
-          <span className="material-symbols-outlined text-[18px]">add</span>
-          Add Another Branch
-        </button>
+
 
       </main>
 

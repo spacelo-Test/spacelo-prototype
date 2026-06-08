@@ -17,7 +17,6 @@ export default function Register() {
       <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 w-full z-40">
         <div className="flex items-center justify-between px-4 py-3 w-full mx-auto">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-teal-700 cursor-pointer hover:bg-gray-50 transition-colors rounded-full p-1">arrow_back</span>
             <span className="text-2xl font-black text-teal-800 italic">Spacelo</span>
           </div>
         </div>

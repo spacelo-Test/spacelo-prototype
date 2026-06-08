@@ -23,7 +23,7 @@ export default function MerchantOnboardingStep3() {
         {/* Progress Bar Section (Mobile Optimized) */}
         <section className="mb-8 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between relative px-2">
-            <div className="absolute top-5 left-0 w-full h-0.5 bg-[#bec9c4] -z-10"></div>
+            <div className="absolute top-5 left-8 right-8 h-0.5 bg-[#bec9c4] -z-10"></div>
             
             {/* Step 1: Done */}
             <div className="flex flex-col items-center bg-[#f7faf7] px-1">
@@ -54,10 +54,10 @@ export default function MerchantOnboardingStep3() {
             </div>
           </div>
           <div className="flex justify-between items-center mt-2 px-2">
-             <span className="text-[10px] font-bold text-[#005344]">Basic</span>
+             <span className="text-[10px] font-bold text-[#005344]">General</span>
              <span className="text-[10px] font-bold text-[#005344]">Shop</span>
-             <span className="text-[10px] font-bold text-[#005344]">Media</span>
-             <span className="text-[10px] text-[#6e7975]">Verify</span>
+             <span className="text-[10px] font-bold text-[#005344]">Location</span>
+             <span className="text-[10px] text-[#6e7975]">Verification</span>
           </div>
         </section>
 

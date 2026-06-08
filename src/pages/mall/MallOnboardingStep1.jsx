@@ -27,7 +27,7 @@ export default function MallOnboardingStep1() {
         {/* Progress Bar Section (Mobile Optimized) */}
         <section className="mb-8 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between relative px-2">
-            <div className="absolute top-5 left-0 w-full h-0.5 bg-[#bec9c4] -z-10"></div>
+            <div className="absolute top-5 left-8 right-8 h-0.5 bg-[#bec9c4] -z-10"></div>
             
             {/* Step 1: Active */}
             <div className="flex flex-col items-center bg-[#f7faf7] px-1">
@@ -79,14 +79,7 @@ export default function MallOnboardingStep1() {
               <input className="w-full h-12 px-4 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="As shown on CNIC" type="text" />
             </div>
 
-            {/* Date of Birth */}
-            <div className="space-y-1.5">
-              <label className="text-[14px] font-semibold text-[#3e4945]">Date of Birth</label>
-              <div className="relative">
-                <input className="w-full h-12 px-4 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg focus:ring-2 focus:ring-[#005344] outline-none text-[16px] appearance-none" type="date" />
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#6e7975] pointer-events-none">calendar_today</span>
-              </div>
-            </div>
+
           </div>
 
           {/* CNIC Upload Section */}

@@ -24,7 +24,7 @@ export default function CompanyOnboardingStep1() {
         {/* Progress Bar Section */}
         <section className="mb-8 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between relative px-2">
-            <div className="absolute top-5 left-0 w-full h-0.5 bg-[#bec9c4] -z-10"></div>
+            <div className="absolute top-5 left-8 right-8 h-0.5 bg-[#bec9c4] -z-10"></div>
             
             {/* Step 1: Active */}
             <div className="flex flex-col items-center bg-[#f7faf7] px-1">
@@ -73,10 +73,7 @@ export default function CompanyOnboardingStep1() {
               <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] focus:border-[#005344] transition-all text-[16px] outline-none" placeholder="Enter your full name" type="text" />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[14px] font-semibold text-[#3e4945]">Designation / Position</label>
-              <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] focus:border-[#005344] transition-all text-[16px] outline-none" placeholder="e.g. Brand Manager, Owner" type="text" />
-            </div>
+
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">

@@ -24,7 +24,7 @@ export default function CompanyOnboardingStep2() {
         {/* Progress Bar Section */}
         <section className="mb-8 w-full max-w-sm mx-auto">
           <div className="flex items-center justify-between relative px-2">
-            <div className="absolute top-5 left-0 w-full h-0.5 bg-[#bec9c4] -z-10"></div>
+            <div className="absolute top-5 left-8 right-8 h-0.5 bg-[#bec9c4] -z-10"></div>
             
             <div className="flex flex-col items-center bg-[#f7faf7] px-1">
               <div className="w-10 h-10 rounded-full bg-[#005344] text-white flex items-center justify-center shadow-md">
@@ -68,10 +68,7 @@ export default function CompanyOnboardingStep2() {
               <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="e.g. Unilever Pakistan Ltd." type="text" />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[14px] font-semibold text-[#3e4945]">Brand Name(s)</label>
-              <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="e.g. Lipton, Surf Excel" type="text" />
-            </div>
+
 
             <div className="space-y-2 pt-2">
               <label className="text-[14px] font-semibold text-[#3e4945]">Company / Brand Logo</label>
