@@ -30,33 +30,47 @@ export default function HomeTab() {
   return (
     <div className="p-4 space-y-6">
       
-      {/* KPI Cards Horizontal Scrollable */}
-      <div className="overflow-x-auto -mx-4 px-4 flex gap-3 scrollbar-hide py-1">
-        <div className="min-w-[140px] bg-white border border-[#e0e3e0] rounded-xl p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] shrink-0">
-          <p className="text-[11px] text-[#6e7975] font-bold uppercase tracking-wider">This Month</p>
-          <p className="text-[18px] font-black text-[#005344] mt-1">PKR 14,500</p>
+      {/* KPI Summary Card */}
+      <div className="relative bg-[#005344] rounded-2xl p-5 shadow-[0_8px_24px_rgba(0,83,68,0.25)] text-white overflow-hidden">
+        {/* Decorative circles */}
+        <div className="absolute -right-10 -top-10 w-36 h-36 bg-white/5 rounded-full"></div>
+        <div className="absolute right-0 top-12 w-20 h-20 bg-white/5 rounded-full"></div>
+
+        {/* Hero: earnings + trust score */}
+        <div className="relative flex items-start justify-between">
+          <div>
+            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider">Earnings This Month</p>
+            <p className="text-[28px] font-black mt-1 leading-none">PKR 14,500</p>
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#9df3dc] mt-2">
+              <span className="material-symbols-outlined text-[14px]">trending_up</span> +32% vs last month
+            </span>
+          </div>
+          <div className="flex items-center gap-1 bg-white/15 px-2.5 py-1 rounded-full shrink-0">
+            <span className="material-symbols-outlined text-[16px] text-[#ffd166] filled" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+            <span className="text-[13px] font-black">4.8</span>
+          </div>
         </div>
-        <div className="min-w-[140px] bg-white border border-[#e0e3e0] rounded-xl p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] shrink-0 border-l-4 border-l-[#fe6a34]">
-          <p className="text-[11px] text-[#6e7975] font-bold uppercase tracking-wider">Pending Payout</p>
-          <p className="text-[18px] font-black text-[#fe6a34] mt-1">PKR 9,000</p>
-        </div>
-        <div className="min-w-[120px] bg-white border border-[#e0e3e0] rounded-xl p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] shrink-0">
-          <p className="text-[11px] text-[#6e7975] font-bold uppercase tracking-wider">Active Bookings</p>
-          <p className="text-[18px] font-black text-[#3e4945] mt-1">
-            {requests.filter(r => r.status === 'Accepted').length}
-          </p>
-        </div>
-        <div className="min-w-[120px] bg-white border border-[#e0e3e0] rounded-xl p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] shrink-0">
-          <p className="text-[11px] text-[#6e7975] font-bold uppercase tracking-wider">Live Listings</p>
-          <p className="text-[18px] font-black text-[#3e4945] mt-1">
-            {listings.filter(l => l.status === 'Live' || l.status === 'Active').length}
-          </p>
-        </div>
-        <div className="min-w-[120px] bg-white border border-[#e0e3e0] rounded-xl p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] shrink-0">
-          <p className="text-[11px] text-[#6e7975] font-bold uppercase tracking-wider">Trust Score</p>
-          <div className="flex items-center gap-1 mt-1 text-[#fe6a34]">
-            <span className="material-symbols-outlined text-[18px] filled">star</span>
-            <span className="text-[16px] font-black">4.8</span>
+
+        {/* Stat tiles */}
+        <div className="relative grid grid-cols-3 gap-2 mt-5">
+          <div className="bg-white/10 rounded-xl p-3">
+            <span className="material-symbols-outlined text-[18px] text-[#fe6a34]">account_balance_wallet</span>
+            <p className="text-[15px] font-black mt-1.5 leading-none">9,000</p>
+            <p className="text-[9px] text-white/70 font-bold uppercase tracking-wide mt-1">Pending Payout</p>
+          </div>
+          <div className="bg-white/10 rounded-xl p-3">
+            <span className="material-symbols-outlined text-[18px] text-[#9df3dc]">event_available</span>
+            <p className="text-[15px] font-black mt-1.5 leading-none">
+              {requests.filter(r => r.status === 'Accepted').length}
+            </p>
+            <p className="text-[9px] text-white/70 font-bold uppercase tracking-wide mt-1">Active Bookings</p>
+          </div>
+          <div className="bg-white/10 rounded-xl p-3">
+            <span className="material-symbols-outlined text-[18px] text-[#9df3dc]">storefront</span>
+            <p className="text-[15px] font-black mt-1.5 leading-none">
+              {listings.filter(l => l.status === 'Live' || l.status === 'Active').length}
+            </p>
+            <p className="text-[9px] text-white/70 font-bold uppercase tracking-wide mt-1">Live Listings</p>
           </div>
         </div>
       </div>
@@ -177,31 +191,15 @@ export default function HomeTab() {
         </div>
       </div>
 
-      {/* Quick Actions Sticky Buttons */}
-      <div className="pt-2 flex flex-col gap-2">
-        <button 
-          onClick={() => navigateToView('spaces', 'add-space')}
-          className="w-full bg-[#005344] text-white py-4 rounded-xl font-bold shadow-md hover:bg-[#003c31] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-[14px]"
+      {/* Quick Actions */}
+      <div className="pt-2">
+        <button
+          onClick={() => navigateToView('bookings', 'detail', 2)}
+          className="w-full bg-white border border-[#bec9c4] text-[#005344] font-bold py-3.5 rounded-xl hover:bg-[#ebefec] active:scale-[0.98] transition-all text-[13px] flex items-center justify-center gap-1.5 shadow-sm"
         >
-          <span className="material-symbols-outlined text-[20px]">add</span>
-          List New Display Space
+          <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
+          Upload Proof Photo
         </button>
-        <div className="grid grid-cols-2 gap-2">
-          <button 
-            onClick={() => navigateToView('earnings')}
-            className="bg-white border border-[#bec9c4] text-[#005344] font-bold py-3 rounded-xl hover:bg-[#ebefec] active:scale-[0.98] transition-all text-[12px] flex items-center justify-center gap-1 shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[18px]">credit_card</span>
-            Withdraw Payout
-          </button>
-          <button 
-            onClick={() => navigateToView('bookings', 'detail', 2)}
-            className="bg-white border border-[#bec9c4] text-[#005344] font-bold py-3 rounded-xl hover:bg-[#ebefec] active:scale-[0.98] transition-all text-[12px] flex items-center justify-center gap-1 shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
-            Upload Proof Photo
-          </button>
-        </div>
       </div>
 
     </div>

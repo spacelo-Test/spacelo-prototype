@@ -5,27 +5,18 @@ import SpacesTab from './SpacesTab';
 import RequestsTab from './RequestsTab';
 import EarningsTab from './EarningsTab';
 import ProfileTab from './ProfileTab';
-import ChatsInbox from './ChatsInbox';
-import ChatThread from './ChatThread';
 import NotificationsCenter from './NotificationsCenter';
 
 export default function DashboardShell({ handleLogout }) {
-  const { 
-    activeTab, 
-    currentView, 
-    chats, 
-    notifications, 
-    navigateToView 
+  const {
+    activeTab,
+    currentView,
+    notifications,
+    navigateToView
   } = useShopkeeper();
 
   const renderActiveTab = () => {
     // Intercept secondary global overlay views
-    if (activeTab === 'profile' && currentView === 'chats') {
-      return <ChatsInbox />;
-    }
-    if (activeTab === 'profile' && currentView === 'chat-thread') {
-      return <ChatThread />;
-    }
     if (activeTab === 'profile' && currentView === 'notifications') {
       return <NotificationsCenter />;
     }
@@ -62,17 +53,6 @@ export default function DashboardShell({ handleLogout }) {
         
         {/* Top bar icons */}
         <div className="flex items-center gap-3">
-          {/* Messages Inbox link */}
-          <button 
-            onClick={() => navigateToView('profile', 'chats')} 
-            className="p-1.5 hover:bg-[#ebefec] rounded-full relative text-[#3e4945] transition-colors"
-          >
-            <span className="material-symbols-outlined text-[24px]">chat_bubble</span>
-            {chats.some(c => c.unread) && (
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#fe6a34] rounded-full border border-white"></span>
-            )}
-          </button>
-
           {/* Notifications Center link */}
           <button 
             onClick={() => navigateToView('profile', 'notifications')} 

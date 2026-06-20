@@ -10,8 +10,7 @@ export default function RequestsTab() {
     setCurrentView,
     viewParams,
     setViewParams,
-    pushNotification,
-    navigateToView
+    pushNotification
   } = useShopkeeper();
 
   const [proofPhotos, setProofPhotos] = useState([]);
@@ -117,17 +116,11 @@ export default function RequestsTab() {
                     >
                       Accept
                     </button>
-                    <button 
+                    <button
                       onClick={() => setRequests(requests.map(r => r.id === item.id ? { ...r, status: 'Rejected' } : r))}
                       className="flex-1 py-2.5 bg-white border border-[#bec9c4] text-[#ba1a1a] font-bold rounded-lg text-xs"
                     >
                       Reject
-                    </button>
-                    <button 
-                      onClick={() => navigateToView('profile', 'chat-thread', item.id)}
-                      className="py-2.5 px-3 bg-white border border-[#bec9c4] text-[#3e4945] font-bold rounded-lg text-xs"
-                    >
-                      Counter
                     </button>
                   </div>
                 )}
@@ -155,7 +148,7 @@ export default function RequestsTab() {
 
         <div className="bg-white border border-[#e0e3e0] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
           <p className="text-[12px] font-bold uppercase tracking-wider text-[#6e7975] mb-3">Booking Status Timeline</p>
-          <div className="relative pl-6 space-y-6 border-l-2 border-l-[#bec9c4]">
+          <div className="relative pl-6 space-y-4 border-l-2 border-l-[#bec9c4]">
             <div className="relative">
               <span className={`absolute -left-[31px] top-0.5 w-4 h-4 rounded-full flex items-center justify-center text-white ${
                 booking.status === 'Accepted' || booking.status === 'Completed' ? 'bg-[#00875a]' : 'bg-[#ffab00]'
@@ -226,20 +219,13 @@ export default function RequestsTab() {
           )}
 
           {booking.contractSignedByShopkeeper && booking.proofs.length === 0 && (
-            <button 
+            <button
               onClick={() => setCurrentView('proof-upload')}
               className="w-full bg-[#005344] text-white py-3.5 rounded-xl font-bold text-sm"
             >
               Upload Product Placement Proof
             </button>
           )}
-
-          <button 
-            onClick={() => navigateToView('profile', 'chat-thread', booking.id)}
-            className="w-full bg-white border border-[#bec9c4] text-[#3e4945] py-3 rounded-xl font-bold text-xs"
-          >
-            Open Brand Chat
-          </button>
         </div>
 
         {booking.proofs.length > 0 && (

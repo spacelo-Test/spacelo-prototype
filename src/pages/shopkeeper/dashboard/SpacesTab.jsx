@@ -18,6 +18,9 @@ export default function SpacesTab() {
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedStatus, setSelectedStatus] = React.useState('All');
+  const [showCalendar, setShowCalendar] = React.useState(false);
+
+  const STEPS = ['A', 'B', 'C', 'D'];
 
   const getStatusBadge = (status) => {
     const maps = {
@@ -48,16 +51,18 @@ export default function SpacesTab() {
       rating: 5.0,
       reviewsCount: 0,
       photo: newSpaceData.photos[0] || "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80",
-      desc: newSpaceData.description || "Beautiful retail shelf available for placement."
+      desc: newSpaceData.description || "Beautiful retail shelf available for placement.",
+      bookingDays: newSpaceData.bookingDays
     };
     setListings([...listings, addedListing]);
     // Reset listing state values
     setNewSpaceData({
       title: '', type: 'shelf', width: '', height: '', depth: '',
       address: '', city: 'Karachi', area: '', shopName: '', floor: 'Ground', ntn: '',
-      price: '', period: 'day', description: '', footfall: 'Medium (50 - 200)', suitability: '', photos: [], mapPinDropped: false
+      price: '', period: 'month', description: '', footfall: 'Medium (50 - 200)', suitability: '', photos: [], mapPinDropped: false, bookingDays: []
     });
     setNewSpaceStep('A');
+    setShowCalendar(false);
     setCurrentView('main');
   };
 
@@ -78,17 +83,6 @@ export default function SpacesTab() {
 
     return (
       <div className="p-4 space-y-4">
-        <div className="flex justify-between items-center px-1">
-          <h2 className="text-[22px] font-black text-[#005344]">My Listed Spaces</h2>
-          <button 
-            onClick={() => { setCurrentView('add-space'); setNewSpaceStep('A'); }}
-            className="bg-[#005344] text-white text-[12px] font-bold py-2 px-3 rounded-xl hover:bg-[#003c31] active:scale-95 transition-all flex items-center gap-1 shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[16px]">add</span>
-            List Space
-          </button>
-        </div>
-
         <div className="relative">
           <input 
             className="w-full pl-10 pr-4 py-3 bg-white border border-[#bec9c4] rounded-xl focus:ring-2 focus:ring-[#005344] focus:border-[#005344] outline-none transition-all text-[14px]"
@@ -169,41 +163,44 @@ export default function SpacesTab() {
 
   // 2. Add Space Form Stepper View (Screen 3)
   if (currentView === 'add-space') {
-    const stepIndex = ['A', 'B', 'C', 'D', 'E'].indexOf(newSpaceStep) + 1;
+    const currentStepIdx = STEPS.indexOf(newSpaceStep);
     return (
       <div className="p-4 space-y-6">
         <div className="flex justify-between items-center">
-          <button 
+          <button
             onClick={() => {
-              if (newSpaceStep === 'A') setCurrentView('main');
-              else if (newSpaceStep === 'B') setNewSpaceStep('A');
-              else if (newSpaceStep === 'C') setNewSpaceStep('B');
-              else if (newSpaceStep === 'D') setNewSpaceStep('C');
-              else if (newSpaceStep === 'E') setNewSpaceStep('D');
-            }} 
+              if (currentStepIdx <= 0) setCurrentView('main');
+              else setNewSpaceStep(STEPS[currentStepIdx - 1]);
+            }}
             className="material-symbols-outlined text-[#005344] hover:bg-[#ebefec] p-1 rounded-full"
           >
             arrow_back
           </button>
           <h2 className="text-[18px] font-bold text-[#005344]">List New Space</h2>
-          <span className="text-xs font-bold text-[#6e7975]">Step {stepIndex} of 5</span>
+          <span className="text-xs font-bold text-[#6e7975]">Step {currentStepIdx + 1} of {STEPS.length}</span>
         </div>
 
         {/* Stepper Progress */}
         <div className="flex justify-between items-center relative px-2 max-w-xs mx-auto">
-          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-[#bec9c4] -translate-y-1/2 -z-10"></div>
-          {['A', 'B', 'C', 'D', 'E'].map((step, idx) => (
-            <div 
+          {/* Base track */}
+          <div className="absolute top-1/2 left-0 w-full h-1 bg-[#bec9c4] -translate-y-1/2 rounded-full -z-10"></div>
+          {/* Filled progress line */}
+          <div
+            className="absolute top-1/2 left-0 h-1 bg-[#00875a] -translate-y-1/2 rounded-full -z-10 transition-all duration-300"
+            style={{ width: `${(currentStepIdx / (STEPS.length - 1)) * 100}%` }}
+          ></div>
+          {STEPS.map((step, idx) => (
+            <div
               key={step}
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold transition-all border-2 ${
-                newSpaceStep === step 
-                  ? 'bg-[#005344] text-white border-[#005344]' 
-                  : idx < ['A', 'B', 'C', 'D', 'E'].indexOf(newSpaceStep)
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold transition-all border-2 ${
+                newSpaceStep === step
+                  ? 'bg-[#005344] text-white border-[#005344]'
+                  : idx < currentStepIdx
                   ? 'bg-[#00875a] text-white border-[#00875a]'
                   : 'bg-white text-[#3e4945] border-[#bec9c4]'
               }`}
             >
-              {step}
+              {idx + 1}
             </div>
           ))}
         </div>
@@ -220,12 +217,12 @@ export default function SpacesTab() {
                 <div key={idx} className="relative aspect-video bg-[#ebefec] rounded-xl overflow-hidden border border-[#bec9c4]">
                   <img className="w-full h-full object-cover" src={ph} alt="" />
                   {idx === 0 && <span className="absolute top-2 left-2 bg-[#00875a] text-white text-[8px] font-black px-1.5 py-0.5 rounded-md">PRIMARY</span>}
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setNewSpaceData({ ...newSpaceData, photos: newSpaceData.photos.filter((_, i) => i !== idx) })}
-                    className="absolute top-2 right-2 bg-black/60 text-white p-1 rounded-full"
+                    className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-full shadow-sm active:scale-95 transition-all"
                   >
-                    <span className="material-symbols-outlined text-xs">close</span>
+                    <span className="material-symbols-outlined text-[18px] leading-none">close</span>
                   </button>
                 </div>
               ))}
@@ -287,6 +284,15 @@ export default function SpacesTab() {
                 placeholder="e.g. Checkout Shelf"
                 type="text" value={newSpaceData.title}
                 onChange={(e) => setNewSpaceData({ ...newSpaceData, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[12px] font-bold uppercase tracking-wider text-[#3e4945]">Description</label>
+              <textarea
+                className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-xl p-3 h-24 focus:ring-2 focus:ring-[#005344] outline-none text-[14px]"
+                placeholder="Brief info about the display space..."
+                value={newSpaceData.description}
+                onChange={(e) => setNewSpaceData({ ...newSpaceData, description: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -378,48 +384,69 @@ export default function SpacesTab() {
             </div>
             <div className="space-y-2">
               <label className="text-[12px] font-bold uppercase tracking-wider text-[#3e4945]">Billing Period</label>
-              <div className="flex border border-[#bec9c4] rounded-xl overflow-hidden">
-                {['day', 'week', 'month'].map((p) => (
-                  <button
-                    key={p} type="button" onClick={() => setNewSpaceData({ ...newSpaceData, period: p })}
-                    className={`flex-1 py-3 text-[12px] font-bold capitalize ${
-                      newSpaceData.period === p ? 'bg-[#005344] text-white' : 'bg-white text-[#3e4945]'
-                    }`}
-                  >
-                    Per {p}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2 border border-[#bec9c4] rounded-xl px-4 py-3 bg-[#ebefec]">
+                <span className="material-symbols-outlined text-[#005344] text-[20px]">calendar_month</span>
+                <span className="text-[14px] font-bold text-[#005344]">Per Month</span>
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold uppercase tracking-wider text-[#3e4945]">Rate (PKR)</label>
-              <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-xl p-3 text-[14px]" placeholder="Rate" type="number" value={newSpaceData.price} onChange={(e) => setNewSpaceData({ ...newSpaceData, price: e.target.value })} />
+              <label className="text-[12px] font-bold uppercase tracking-wider text-[#3e4945]">Monthly Rate (PKR)</label>
+              <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-xl p-3 text-[14px]" placeholder="Monthly rate" type="number" value={newSpaceData.price} onChange={(e) => setNewSpaceData({ ...newSpaceData, price: e.target.value })} />
             </div>
-            <button 
-              onClick={() => setNewSpaceStep('E')}
+
+            {/* Booking Days Calendar (collapsible) */}
+            <div className="space-y-2">
+              <label className="text-[12px] font-bold uppercase tracking-wider text-[#3e4945]">Available Booking Days</label>
+              <button
+                type="button"
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="w-full flex items-center justify-between border border-[#bec9c4] rounded-xl px-4 py-3 bg-white hover:bg-[#f7faf7] transition-all"
+              >
+                <span className="flex items-center gap-2 text-[14px] font-bold text-[#005344]">
+                  <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+                  {newSpaceData.bookingDays.length > 0
+                    ? `${newSpaceData.bookingDays.length} day(s) selected`
+                    : 'Select booking days'}
+                </span>
+                <span className={`material-symbols-outlined text-[22px] text-[#6e7975] transition-transform ${showCalendar ? 'rotate-180' : ''}`}>expand_more</span>
+              </button>
+
+              {showCalendar && (
+                <div className="bg-white border border-[#e0e3e0] rounded-xl p-3.5 space-y-3">
+                  <p className="text-xs font-bold text-[#3e4945]">June 2026</p>
+                  <div className="grid grid-cols-7 gap-1.5 text-center text-xs">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i} className="font-bold text-[#6e7975] py-1">{d}</span>)}
+                    {Array.from({ length: 30 }).map((_, idx) => {
+                      const day = idx + 1;
+                      const selected = newSpaceData.bookingDays.includes(day);
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setNewSpaceData({
+                            ...newSpaceData,
+                            bookingDays: selected
+                              ? newSpaceData.bookingDays.filter((d) => d !== day)
+                              : [...newSpaceData.bookingDays, day]
+                          })}
+                          className={`py-1.5 rounded-lg font-semibold transition-all ${
+                            selected ? 'bg-[#005344] text-white' : 'bg-[#ebefec] text-[#3e4945] hover:bg-[#d7dbd8]'
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleCreateSpace}
               disabled={!newSpaceData.price}
               className={`w-full py-3.5 rounded-xl font-bold transition-all mt-4 text-[14px] ${
-                newSpaceData.price ? 'bg-[#005344] text-white' : 'bg-gray-200 text-gray-400'
+                newSpaceData.price ? 'bg-[#00875a] text-white' : 'bg-gray-200 text-gray-400'
               }`}
-            >
-              Continue to Description
-            </button>
-          </div>
-        )}
-
-        {/* STEP E */}
-        {newSpaceStep === 'E' && (
-          <div className="space-y-5">
-            <div>
-              <h3 className="text-[20px] font-bold text-[#005344]">Final Review</h3>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[12px] font-bold uppercase tracking-wider text-[#3e4945]">Description</label>
-              <textarea className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-xl p-3 h-24 text-[14px]" placeholder="Brief info..." value={newSpaceData.description} onChange={(e) => setNewSpaceData({ ...newSpaceData, description: e.target.value })} />
-            </div>
-            <button 
-              onClick={handleCreateSpace}
-              className="w-full py-3.5 bg-[#00875a] text-white rounded-xl font-bold text-[14px]"
             >
               Submit for Approval
             </button>
@@ -482,12 +509,15 @@ export default function SpacesTab() {
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i} className="font-bold text-[#6e7975] py-1">{d}</span>)}
                 {Array.from({ length: 30 }).map((_, idx) => {
                   const day = idx + 1;
-                  const isBooked = day >= 10 && day <= 15;
+                  const hasCustomDays = space.bookingDays && space.bookingDays.length > 0;
+                  const isAvailable = hasCustomDays
+                    ? space.bookingDays.includes(day)
+                    : !(day >= 10 && day <= 15);
                   return (
-                    <span 
-                      key={idx} 
+                    <span
+                      key={idx}
                       className={`py-1.5 rounded-lg font-semibold ${
-                        isBooked ? 'bg-[#ffab00]/20 text-[#ab6b00]' : 'bg-[#00875a]/10 text-[#00875a]'
+                        isAvailable ? 'bg-[#00875a]/10 text-[#00875a]' : 'bg-[#ffab00]/20 text-[#ab6b00]'
                       }`}
                     >
                       {day}
