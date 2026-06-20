@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function MerchantOnboardingStep4() {
+export default function MemberOnboardingStep4() {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
 

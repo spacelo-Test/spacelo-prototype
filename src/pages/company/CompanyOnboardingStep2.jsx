@@ -26,32 +26,29 @@ export default function CompanyOnboardingStep2() {
           <div className="flex items-center justify-between relative px-2">
             <div className="absolute top-5 left-8 right-8 h-0.5 bg-[#bec9c4] -z-10"></div>
             
+            {/* Step 1: Done */}
             <div className="flex flex-col items-center bg-[#f7faf7] px-1">
               <div className="w-10 h-10 rounded-full bg-[#005344] text-white flex items-center justify-center shadow-md">
                 <span className="material-symbols-outlined text-[20px]">check</span>
               </div>
             </div>
+            {/* Step 2: Active */}
             <div className="flex flex-col items-center bg-[#f7faf7] px-1">
               <div className="w-10 h-10 rounded-full bg-[#006d5b] text-[#96ebd5] border-2 border-[#005344] flex items-center justify-center shadow-md">
                 <span className="font-bold text-[16px]">2</span>
               </div>
             </div>
+            {/* Step 3: Inactive */}
             <div className="flex flex-col items-center bg-[#f7faf7] px-1">
               <div className="w-10 h-10 rounded-full bg-[#ebefec] text-[#3e4945] flex items-center justify-center border-2 border-[#bec9c4]">
                 <span className="text-[16px]">3</span>
               </div>
             </div>
-            <div className="flex flex-col items-center bg-[#f7faf7] px-1">
-              <div className="w-10 h-10 rounded-full bg-[#ebefec] text-[#3e4945] flex items-center justify-center border-2 border-[#bec9c4]">
-                <span className="text-[16px]">4</span>
-              </div>
-            </div>
           </div>
           <div className="flex justify-between items-center mt-2 px-2">
-             <span className="text-[10px] font-bold text-[#005344]">Contact</span>
+             <span className="text-[10px] font-bold text-[#005344]">Representative</span>
              <span className="text-[10px] font-bold text-[#005344]">Brand</span>
              <span className="text-[10px] text-[#6e7975]">Location</span>
-             <span className="text-[10px] text-[#6e7975]">Verify</span>
           </div>
         </section>
 
@@ -67,8 +64,6 @@ export default function CompanyOnboardingStep2() {
               <label className="text-[14px] font-semibold text-[#3e4945]">Company Legal Name</label>
               <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="e.g. Unilever Pakistan Ltd." type="text" />
             </div>
-
-
 
             <div className="space-y-2 pt-2">
               <label className="text-[14px] font-semibold text-[#3e4945]">Company / Brand Logo</label>
@@ -107,10 +102,9 @@ export default function CompanyOnboardingStep2() {
                 <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="YYYY" type="number" />
               </div>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-[14px] font-semibold text-[#3e4945]">Total SKUs</label>
-                </div>
+                <label className="text-[14px] font-semibold text-[#3e4945]">Total SKUs (Unique Products)</label>
                 <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="e.g. 150" type="number" />
+                <p className="text-[11px] text-[#6e7975] mt-1">Total number of active products/items (Stock Keeping Units) in your catalog.</p>
               </div>
             </div>
 

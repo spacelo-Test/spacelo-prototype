@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function MallOnboardingStep3() {
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    localStorage.setItem('onboardingCompleted', 'true');
+    setShowModal(true);
+  };
 
   return (
     <div className="bg-[#f7faf7] min-h-full flex flex-col font-manrope">
@@ -15,9 +22,6 @@ export default function MallOnboardingStep3() {
               arrow_back
             </button>
             <h1 className="text-[20px] font-bold text-[#005344]">Mall Profile</h1>
-          </div>
-          <div className="flex items-center">
-            <span className="text-[#3e4945] font-semibold text-[12px]">Step 3 of 4</span>
           </div>
         </div>
       </header>
@@ -49,19 +53,11 @@ export default function MallOnboardingStep3() {
                 <span className="font-bold text-[16px]">3</span>
               </div>
             </div>
-            
-            {/* Step 4: Inactive */}
-            <div className="flex flex-col items-center bg-[#f7faf7] px-1">
-              <div className="w-10 h-10 rounded-full bg-[#ebefec] text-[#3e4945] flex items-center justify-center border-2 border-[#bec9c4]">
-                <span className="text-[16px]">4</span>
-              </div>
-            </div>
           </div>
           <div className="flex justify-between items-center mt-2 px-2">
              <span className="text-[10px] font-bold text-[#005344]">Basic</span>
              <span className="text-[10px] font-bold text-[#005344]">Shop</span>
              <span className="text-[10px] font-bold text-[#005344]">Location</span>
-             <span className="text-[10px] text-[#6e7975]">Verify</span>
           </div>
         </section>
 
@@ -72,62 +68,50 @@ export default function MallOnboardingStep3() {
           </div>
         </div>
 
-        {/* Branch Card 1 */}
-        <section className="bg-white p-5 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-[#e0e3e0] mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[18px] font-bold text-[#005344]">Main Branch</h3>
-            <span className="bg-[#81d6c0] text-[#00201c] px-3 py-1 rounded-full text-[10px] font-bold">Branch #1</span>
-          </div>
-          
-          <div className="space-y-5">
-            {/* Location Inputs */}
-            <div className="space-y-1.5">
-              <label className="text-[14px] font-semibold text-[#181c1b]">Branch Address</label>
-              <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="e.g. 45-C, 24th Commercial St" type="text" />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+        <form id="mall-onboarding-step3" onSubmit={handleSubmit} className="space-y-6">
+          {/* Branch Card */}
+          <section className="bg-white p-5 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-[#e0e3e0] mb-6">
+            <div className="space-y-5">
+              {/* Location Inputs */}
               <div className="space-y-1.5">
-                <label className="text-[14px] font-semibold text-[#181c1b]">City</label>
-                <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="Karachi" type="text" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[14px] font-semibold text-[#181c1b]">Area</label>
-                <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="DHA Phase 2" type="text" />
-              </div>
-            </div>
-            
-            <button className="w-full flex items-center justify-center gap-2 py-3 border-2 border-[#005344] text-[#005344] font-bold rounded-lg hover:bg-[#ebefec] transition-all">
-              <span className="material-symbols-outlined text-[18px]">location_on</span>
-              Drop Google Maps Pin
-            </button>
-
-            {/* Media Uploads */}
-            <div className="pt-2 border-t border-[#e0e3e0] space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-[14px] font-semibold text-[#181c1b]">Exterior Photos</label>
-                  <span className="text-[10px] font-bold text-[#ab3500]">0/5 uploaded</span>
-                </div>
-                <button className="w-full h-24 border-2 border-dashed border-[#bec9c4] bg-[#f7faf7] rounded-lg flex flex-col items-center justify-center text-[#6e7975] hover:border-[#005344] hover:text-[#005344] transition-all">
-                  <span className="material-symbols-outlined mb-1">add_a_photo</span>
-                  <span className="text-[12px] font-bold">Add Photos</span>
-                </button>
+                <label className="text-[14px] font-semibold text-[#181c1b]">Branch Address</label>
+                <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="e.g. 45-C, 24th Commercial St" type="text" required />
               </div>
               
-              <div>
-                <label className="text-[14px] font-semibold text-[#181c1b] mb-2 block">Interior Photos</label>
-                <button className="w-full h-24 border-2 border-dashed border-[#bec9c4] bg-[#f7faf7] rounded-lg flex flex-col items-center justify-center text-[#6e7975] hover:border-[#005344] hover:text-[#005344] transition-all">
-                  <span className="material-symbols-outlined mb-1">cloud_upload</span>
-                  <span className="text-[12px] font-bold">Upload Interior Views</span>
-                </button>
+              <div className="space-y-1.5">
+                <label className="text-[14px] font-semibold text-[#181c1b]">City</label>
+                <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="Karachi" type="text" required />
+              </div>
+              
+              <button type="button" className="w-full flex items-center justify-center gap-2 py-3 border-2 border-[#005344] text-[#005344] font-bold rounded-lg hover:bg-[#ebefec] transition-all">
+                <span className="material-symbols-outlined text-[18px]">location_on</span>
+                Drop Google Maps Pin
+              </button>
+
+              {/* Media Uploads */}
+              <div className="pt-2 border-t border-[#e0e3e0] space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-[14px] font-semibold text-[#181c1b]">Exterior Photos</label>
+                    <span className="text-[10px] font-bold text-[#ab3500]">0/5 uploaded</span>
+                  </div>
+                  <button type="button" className="w-full h-24 border-2 border-dashed border-[#bec9c4] bg-[#f7faf7] rounded-lg flex flex-col items-center justify-center text-[#6e7975] hover:border-[#005344] hover:text-[#005344] transition-all">
+                    <span className="material-symbols-outlined mb-1">add_a_photo</span>
+                    <span className="text-[12px] font-bold">Add Photos</span>
+                  </button>
+                </div>
+                
+                <div>
+                  <label className="text-[14px] font-semibold text-[#181c1b] mb-2 block">Interior Photos</label>
+                  <button type="button" className="w-full h-24 border-2 border-dashed border-[#bec9c4] bg-[#f7faf7] rounded-lg flex flex-col items-center justify-center text-[#6e7975] hover:border-[#005344] hover:text-[#005344] transition-all">
+                    <span className="material-symbols-outlined mb-1">cloud_upload</span>
+                    <span className="text-[12px] font-bold">Upload Interior Views</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-
-
-
+          </section>
+        </form>
       </main>
 
       {/* Footer Navigation */}
@@ -138,12 +122,36 @@ export default function MallOnboardingStep3() {
             <span className="text-[14px] font-bold">Back</span>
           </button>
           
-          <button onClick={() => navigate('/onboarding/mall/step4')} className="flex items-center justify-center bg-[#ab3500] text-white rounded-lg px-8 py-3 hover:opacity-90 transition-all shadow-md active:scale-95">
-            <span className="text-[14px] font-bold mr-1">Next</span>
-            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+          <button type="submit" form="mall-onboarding-step3" className="flex items-center justify-center bg-[#ab3500] text-white rounded-lg px-8 py-3 hover:opacity-90 transition-all shadow-md active:scale-95">
+            <span className="text-[14px] font-bold mr-1">Submit Application</span>
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
           </button>
         </div>
       </footer>
+
+      {/* Success Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] bg-[#181c1b]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl text-center relative overflow-hidden flex flex-col items-center">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-[#ab3500]"></div>
+            
+            <div className="w-20 h-20 bg-[#fe6a34]/10 text-[#ab3500] rounded-full flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            </div>
+            
+            <h2 className="text-[22px] font-bold text-[#181c1b] mb-2">Awaiting Admin Approval</h2>
+            <p className="text-[14px] text-[#3e4945] mb-6">
+              Your Mall Owner application has been submitted securely and is pending admin approval.
+            </p>
+            
+            <div className="w-full space-y-3">
+              <button onClick={() => navigate('/dashboard')} className="w-full bg-[#005344] text-white py-3 rounded-lg text-[14px] font-bold shadow-md hover:bg-[#006d5b] active:scale-95 transition-all">
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

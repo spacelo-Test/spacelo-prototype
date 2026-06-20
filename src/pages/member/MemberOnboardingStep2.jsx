@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function MerchantOnboardingStep2() {
+export default function MemberOnboardingStep2() {
   const navigate = useNavigate();
 
   return (
@@ -51,19 +51,11 @@ export default function MerchantOnboardingStep2() {
                 <span className="text-[16px]">3</span>
               </div>
             </div>
-
-            {/* Step 4: Inactive */}
-            <div className="flex flex-col items-center bg-[#f7faf7] px-1">
-              <div className="w-10 h-10 rounded-full bg-[#ebefec] text-[#3e4945] flex items-center justify-center border-2 border-[#bec9c4]">
-                <span className="text-[16px]">4</span>
-              </div>
-            </div>
           </div>
           <div className="flex justify-between items-center mt-2 px-2">
              <span className="text-[10px] font-bold text-[#005344]">General</span>
              <span className="text-[10px] font-bold text-[#005344]">Shop</span>
              <span className="text-[10px] text-[#6e7975]">Location</span>
-             <span className="text-[10px] text-[#6e7975]">Verification</span>
           </div>
         </section>
 
@@ -174,34 +166,7 @@ export default function MerchantOnboardingStep2() {
               </div>
             </div>
 
-            {/* Categories of Products Sold */}
-            <div className="space-y-2 mt-2">
-              <label className="text-[14px] font-semibold text-[#3e4945] block">
-                Categories of Products Sold
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  "Grocery",
-                  "Dairy",
-                  "Beverages",
-                  "Cosmetics",
-                  "Stationary",
-                  "Household",
-                ].map((cat, i) => (
-                  <label
-                    key={cat}
-                    className="flex items-center gap-2 p-3 border border-[#bec9c4] rounded-lg cursor-pointer hover:bg-[#ebefec] transition-colors"
-                  >
-                    <input
-                      defaultChecked={i < 2}
-                      className="w-4 h-4 rounded border-[#bec9c4] text-[#005344] focus:ring-[#005344]"
-                      type="checkbox"
-                    />
-                    <span className="text-[14px] text-[#181c1b]">{cat}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+
           </form>
         </section>
       </main>
@@ -221,7 +186,7 @@ export default function MerchantOnboardingStep2() {
           </button>
           {/* Next Button */}
           <button
-            onClick={() => navigate("/onboarding/merchant/step3")}
+            onClick={() => navigate("/onboarding/member/step3")}
             className="flex items-center justify-center bg-[#005344] text-white rounded-lg px-8 py-3 hover:opacity-90 transition-all shadow-md active:scale-95"
           >
             <span className="text-[14px] font-bold mr-1">Next</span>

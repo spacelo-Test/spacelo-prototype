@@ -44,23 +44,16 @@ export default function CompanyOnboardingStep1() {
                 <span className="text-[16px]">3</span>
               </div>
             </div>
-            {/* Step 4: Inactive */}
-            <div className="flex flex-col items-center bg-[#f7faf7] px-1">
-              <div className="w-10 h-10 rounded-full bg-[#ebefec] text-[#3e4945] flex items-center justify-center border-2 border-[#bec9c4]">
-                <span className="text-[16px]">4</span>
-              </div>
-            </div>
           </div>
           <div className="flex justify-between items-center mt-2 px-2">
-             <span className="text-[10px] font-bold text-[#005344]">Contact</span>
+             <span className="text-[10px] font-bold text-[#005344]">Representative</span>
              <span className="text-[10px] text-[#6e7975]">Brand</span>
              <span className="text-[10px] text-[#6e7975]">Location</span>
-             <span className="text-[10px] text-[#6e7975]">Verify</span>
           </div>
         </section>
 
         <div className="mb-6">
-          <h2 className="text-[24px] font-bold text-[#005344] mb-1">Contact Person</h2>
+          <h2 className="text-[24px] font-bold text-[#005344] mb-1">Representative Details</h2>
           <p className="text-[14px] text-[#3e4945]">Tell us about yourself to establish your brand presence on Spacelo.</p>
         </div>
 
@@ -73,17 +66,9 @@ export default function CompanyOnboardingStep1() {
               <input className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] focus:border-[#005344] transition-all text-[16px] outline-none" placeholder="Enter your full name" type="text" />
             </div>
 
-
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[14px] font-semibold text-[#3e4945]">Mobile Number</label>
-                <input className="w-full bg-[#e5e9e6] border border-[#bec9c4] rounded-lg p-3 text-[14px] text-[#6e7975] outline-none cursor-not-allowed" value="+92 300 1234567" disabled type="text" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[14px] font-semibold text-[#3e4945]">Email Address</label>
-                <input className="w-full bg-[#e5e9e6] border border-[#bec9c4] rounded-lg p-3 text-[14px] text-[#6e7975] outline-none cursor-not-allowed" value="hello@spacelo.pk" disabled type="text" />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-[14px] font-semibold text-[#3e4945]">Mobile Number</label>
+              <input className="w-full bg-[#e5e9e6] border border-[#bec9c4] rounded-lg p-3 text-[14px] text-[#6e7975] outline-none cursor-not-allowed" value="+92 300 1234567" disabled type="text" />
             </div>
 
             <div className="space-y-1.5">

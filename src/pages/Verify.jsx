@@ -6,7 +6,16 @@ export default function Verify() {
 
   const handleVerify = (e) => {
     e.preventDefault();
-    navigate('/login');
+    const role = localStorage.getItem('userRole') || 'Shopkeeper';
+    if (role === 'Shopkeeper') {
+      navigate('/onboarding/shopkeeper');
+    } else if (role === 'Mall Owner') {
+      navigate('/onboarding/mall');
+    } else if (role === 'Company/Brand') {
+      navigate('/onboarding/company');
+    } else {
+      navigate('/onboarding/shopkeeper');
+    }
   };
 
   return (

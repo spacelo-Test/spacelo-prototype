@@ -4,10 +4,12 @@ import { useNavigate, Link } from 'react-router-dom';
 export default function Register() {
   const navigate = useNavigate();
   const [role, setRole] = useState('Shopkeeper');
+  const [name, setName] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     localStorage.setItem('userRole', role);
+    localStorage.setItem('fullName', name);
     navigate('/verify');
   };
 
@@ -36,7 +38,7 @@ export default function Register() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[14px] font-semibold text-[#005344] uppercase tracking-wider" htmlFor="full_name">Full Name</label>
                   <div className="relative">
-                    <input className="w-full px-4 py-3 bg-[#F3F4F6] border border-[#e0e3e0] rounded-lg focus:ring-2 focus:ring-[#005344]/20 focus:border-[#005344] outline-none transition-all text-[16px]" id="full_name" placeholder="Enter your full name" type="text" />
+                    <input className="w-full px-4 py-3 bg-[#F3F4F6] border border-[#e0e3e0] rounded-lg focus:ring-2 focus:ring-[#005344]/20 focus:border-[#005344] outline-none transition-all text-[16px]" id="full_name" placeholder="Enter your full name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
                   </div>
                 </div>
 

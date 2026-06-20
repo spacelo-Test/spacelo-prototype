@@ -6,17 +6,22 @@ export default function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // Retrieve the role they selected during registration
     const role = localStorage.getItem('userRole') || 'Shopkeeper';
+    const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
+
+    if (onboardingCompleted) {
+      navigate('/dashboard');
+      return;
+    }
 
     if (role === 'Shopkeeper') {
-      navigate('/onboarding/merchant');
+      navigate('/onboarding/shopkeeper');
     } else if (role === 'Mall Owner') {
       navigate('/onboarding/mall');
     } else if (role === 'Company/Brand') {
       navigate('/onboarding/company');
     } else {
-      navigate('/onboarding/merchant'); // fallback
+      navigate('/onboarding/shopkeeper'); // fallback
     }
   };
 

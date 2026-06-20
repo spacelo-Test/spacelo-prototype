@@ -1,8 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function MerchantOnboarding() {
+export default function MemberOnboarding() {
   const navigate = useNavigate();
+  const registeredName = localStorage.getItem('fullName');
 
   return (
     <div className="bg-surface-container-low min-h-full flex flex-col font-manrope">
@@ -49,19 +50,11 @@ export default function MerchantOnboarding() {
                 <span className="text-[16px]">3</span>
               </div>
             </div>
-
-            {/* Step 4: Inactive */}
-            <div className="flex flex-col items-center bg-[#f7faf7] px-1">
-              <div className="w-10 h-10 rounded-full bg-[#ebefec] text-[#3e4945] flex items-center justify-center border-2 border-[#bec9c4]">
-                <span className="text-[16px]">4</span>
-              </div>
-            </div>
           </div>
           <div className="flex justify-between items-center mt-2 px-2">
             <span className="text-[10px] font-bold text-[#005344]">General</span>
             <span className="text-[10px] text-[#6e7975]">Shop</span>
             <span className="text-[10px] text-[#6e7975]">Location</span>
-            <span className="text-[10px] text-[#6e7975]">Verification</span>
           </div>
         </section>
 
@@ -69,16 +62,18 @@ export default function MerchantOnboarding() {
         <div className="bg-[#ffffff] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-5 mb-6 border border-[#e0e3e0]">
           <div className="space-y-6">
             {/* Full Name */}
-            <div className="space-y-1.5">
-              <label className="text-[14px] font-semibold text-[#3e4945]">
-                Full Name
-              </label>
-              <input
-                className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] focus:border-[#005344] transition-all text-[16px] outline-none"
-                placeholder="Enter your full name"
-                type="text"
-              />
-            </div>
+            {!registeredName && (
+              <div className="space-y-1.5">
+                <label className="text-[14px] font-semibold text-[#3e4945]">
+                  Full Name
+                </label>
+                <input
+                  className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] focus:border-[#005344] transition-all text-[16px] outline-none"
+                  placeholder="Enter your full name"
+                  type="text"
+                />
+              </div>
+            )}
 
             {/* CNIC Number Field */}
             <div className="space-y-1.5">
@@ -130,33 +125,7 @@ export default function MerchantOnboarding() {
               </div>
             </div>
 
-            {/* Date of Birth */}
-            {/* <div className="space-y-1.5">
-              <label className="text-[14px] font-semibold text-[#3e4945]">
-                Date of Birth
-              </label>
-              <div className="relative">
-                <input
-                  className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] focus:border-[#005344] transition-all text-[16px] outline-none appearance-none"
-                  type="date"
-                />
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#6e7975] pointer-events-none">
-                  calendar_today
-                </span>
-              </div>
-            </div> */}
 
-            {/* Father/Husband Name */}
-            <div className="space-y-1.5">
-              <label className="text-[14px] font-semibold text-[#3e4945]">
-                Father's / Husband's Name
-              </label>
-              <input
-                className="w-full bg-[#F3F4F6] border border-[#bec9c4] rounded-lg p-3 focus:ring-2 focus:ring-[#005344] focus:border-[#005344] transition-all text-[16px] outline-none"
-                placeholder="Enter father's or husband's name"
-                type="text"
-              />
-            </div>
 
             {/* Selfie Upload */}
             <div className="space-y-2 pt-2">
@@ -212,7 +181,7 @@ export default function MerchantOnboarding() {
 
         {/* Next Button */}
         <button
-          onClick={() => navigate("/onboarding/merchant/step2")}
+          onClick={() => navigate("/onboarding/member/step2")}
           className="flex items-center justify-center gap-1 bg-[#fe6a34] text-[#5d1900] rounded-lg px-8 py-3 hover:bg-[#ffdbd0] transition-all active:scale-95 shadow-md font-bold"
         >
           <span className="text-[14px]">Next</span>
