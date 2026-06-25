@@ -1,0 +1,812 @@
+import React, { useState, useEffect } from 'react';
+import { useShopkeeper } from './ShopkeeperContext';
+
+export default function ListingsTab() {
+  const {
+    spaces,
+    setSpaces,
+    listings,
+    setListings,
+    requests,
+    currentView,
+    setCurrentView,
+    viewParams,
+    setViewParams,
+    newListingStep,
+    setNewListingStep,
+    newListingData,
+    setNewListingData,
+    resetListingForm,
+    navigateToView,
+    pushNotification,
+    unlistedSpaces
+  } = useShopkeeper();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [isInlineSearch, setIsInlineSearch] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Helper for space type labels
+  const getSpaceTypeLabel = (type) => {
+    const types = {
+      shelf: 'Shelf',
+      end_cap: 'End-Cap',
+      window_display: 'Window Display',
+      floor_stand: 'Floor Stand',
+      checkout_counter: 'Checkout Counter',
+      entrance_display: 'Entrance Display',
+      promotional_aisle: 'Promotional Aisle',
+      other: 'Other'
+    };
+    return types[type] || 'Other';
+  };
+
+  // Status badges classes
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'Live':
+        return 'bg-[#00875a]/10 text-[#00875a] border border-[#00875a]/20';
+      case 'Pending Approval':
+        return 'bg-[#ffab00]/10 text-[#ab6b00] border border-[#ffab00]/20';
+      case 'Inactive':
+      case 'Expired':
+        return 'bg-gray-100 text-gray-500 border border-gray-200';
+      default:
+        return 'bg-gray-100 text-gray-500 border border-gray-200';
+    }
+  };
+
+  // Load existing listing data if editing
+  useEffect(() => {
+    if (currentView === 'create-listing' && viewParams) {
+      const listingToEdit = listings.find(l => l.id === viewParams);
+      if (listingToEdit) {
+        setIsEditing(true);
+        setNewListingData({ ...listingToEdit });
+      }
+    } else if (currentView === 'create-listing') {
+      setIsEditing(false);
+    }
+  }, [currentView, viewParams, listings]);
+
+  // Duration month calculation
+  const calculateMonths = (start, end) => {
+    if (!start || !end) return 0;
+    const sDate = new Date(start);
+    const eDate = new Date(end);
+    if (isNaN(sDate.getTime()) || isNaN(eDate.getTime())) return 0;
+    
+    const diffTime = Math.abs(eDate - sDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const months = Math.round(diffDays / 30.4);
+    return months || 1;
+  };
+
+  // Start Date / End Date logic
+  useEffect(() => {
+    if (newListingData.startDate && newListingData.endDate) {
+      const months = calculateMonths(newListingData.startDate, newListingData.endDate);
+      const pricePerMo = newListingData.totalPrice && months > 0
+        ? Math.round(newListingData.totalPrice / months)
+        : 0;
+
+      // format label
+      const startF = new Date(newListingData.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const endF = new Date(newListingData.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const label = `${months} month${months > 1 ? 's' : ''} — ${startF} to ${endF}`;
+
+      setNewListingData(prev => ({
+        ...prev,
+        durationMonths: months,
+        durationLabel: label,
+        pricePerMonth: pricePerMo
+      }));
+    }
+  }, [newListingData.startDate, newListingData.endDate, newListingData.totalPrice]);
+
+  // Handle saving listing
+  const handleSaveListing = () => {
+    const selectedSpace = spaces.find(s => s.id === newListingData.spaceId);
+    const spacePhoto = selectedSpace && selectedSpace.photos && selectedSpace.photos.length > 0
+      ? selectedSpace.photos[0]
+      : "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80";
+
+    if (isEditing) {
+      // Edit listing
+      setListings(prev => prev.map(l => l.id === viewParams ? { ...newListingData } : l));
+      pushNotification(
+        'admin',
+        'Listing Updated',
+        `Commercial offer for "${selectedSpace?.nickname}" has been updated.`,
+        { tab: 'listings', view: 'listing-detail', id: viewParams }
+      );
+    } else {
+      // Create listing
+      const newId = listings.length > 0 ? Math.max(...listings.map(l => l.id)) + 1 : 1;
+      const createdListing = {
+        ...newListingData,
+        id: newId,
+        status: 'Pending Approval',
+        verified: false,
+        bookingsCount: 0,
+        photo: spacePhoto
+      };
+      setListings(prev => [...prev, createdListing]);
+      // Update space status to Listed
+      setSpaces(prev => prev.map(s => s.id === newListingData.spaceId ? { ...s, status: 'Listed', listingId: newId } : s));
+
+      pushNotification(
+        'contract',
+        'Listing Submitted',
+        `Listing for "${selectedSpace?.nickname}" submitted for admin review.`,
+        { tab: 'listings', view: 'listing-detail', id: newId }
+      );
+    }
+    resetListingForm();
+    setIsEditing(false);
+    setCurrentView('main');
+    setViewParams(null);
+  };
+
+  // VIEW 1: Main Listings list
+  if (currentView === 'main') {
+    const liveListings = listings.filter(l => l.status === 'Live').length;
+    const pendingListings = listings.filter(l => l.status === 'Pending Approval').length;
+
+    const filteredListings = listings.filter(listing => {
+      const space = spaces.find(s => s.id === listing.spaceId);
+      const spaceName = space ? space.nickname : '';
+      
+      const matchesSearch = spaceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            listing.productPreference.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            listing.durationLabel.toLowerCase().includes(searchQuery.toLowerCase());
+
+      if (activeFilter === 'All') return matchesSearch;
+      return matchesSearch && listing.status === activeFilter;
+    });
+
+    return (
+      <div className="flex-grow flex flex-col relative h-full overflow-hidden">
+        {/* Header */}
+        <div className="bg-white border-b border-[#e0e3e0] px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+          {isInlineSearch ? (
+            <div className="flex items-center w-full gap-2">
+              <span className="material-symbols-outlined text-[#6e7975]">search</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search listings..."
+                className="flex-grow text-[15px] outline-none border-b border-[#005344] py-1"
+                autoFocus
+              />
+              <button onClick={() => { setIsInlineSearch(false); setSearchQuery(''); }} className="material-symbols-outlined text-[#6e7975]">close</button>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-[20px] font-black text-[#181c1b]">My Listings</h1>
+              <button onClick={() => setIsInlineSearch(true)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#005344]">
+                <span className="material-symbols-outlined">search</span>
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Summary strip */}
+        <div className="bg-[#005344]/5 border-b border-[#e0e3e0] px-4 py-2 text-[12px] text-[#005344] font-medium">
+          {liveListings} live • {pendingListings} pending approval
+        </div>
+
+        {/* Filter chips */}
+        <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-hide bg-white border-b border-[#e0e3e0]">
+          {['All', 'Live', 'Pending Approval', 'Inactive', 'Expired'].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all whitespace-nowrap ${
+                activeFilter === filter
+                  ? 'bg-[#005344] text-white'
+                  : 'bg-[#f0f3f0] text-[#6e7975] hover:bg-gray-200'
+              }`}
+            >
+              {filter === 'Pending Approval' ? 'Pending' : filter}
+            </button>
+          ))}
+        </div>
+
+        {/* Listings List */}
+        <div className="flex-grow overflow-y-auto p-4 pb-28 space-y-3">
+          {filteredListings.length > 0 ? (
+            filteredListings.map((listing) => {
+              const space = spaces.find(s => s.id === listing.spaceId);
+              const nickname = space ? space.nickname : 'Unknown Space';
+              const type = space ? space.type : 'shelf';
+
+              return (
+                <div
+                  key={listing.id}
+                  onClick={() => { setCurrentView('listing-detail'); setViewParams(listing.id); }}
+                  className="bg-white p-3 rounded-xl border border-[#e0e3e0] shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex gap-3 cursor-pointer hover:border-[#005344] transition-all"
+                >
+                  {/* Left: Thumbnail */}
+                  <img
+                    src={listing.photo || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80'}
+                    alt={nickname}
+                    className="w-16 h-16 rounded-lg object-cover bg-gray-100 flex-shrink-0"
+                  />
+
+                  {/* Right: Info */}
+                  <div className="flex-grow min-w-0 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1 min-w-0">
+                          <span className="bg-[#f0f3f0] text-[#005344] px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex-shrink-0">
+                            {getSpaceTypeLabel(type)}
+                          </span>
+                          <span className="text-[14px] font-bold text-[#181c1b] truncate">{nickname}</span>
+                          {listing.verified && (
+                            <span className="material-symbols-outlined text-[14px] text-[#00875a] flex-shrink-0 font-bold" title="Verified Space">
+                              verified
+                            </span>
+                          )}
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex-shrink-0 ${getStatusBadgeClass(listing.status)}`}>
+                          {listing.status === 'Pending Approval' ? 'Pending' : listing.status}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-[#6e7975] mt-1 font-medium truncate">{listing.durationLabel}</div>
+                    </div>
+
+                    <div className="flex items-end justify-between mt-2">
+                      <div>
+                        <span className="text-[15px] font-black text-[#005344]">PKR {listing.totalPrice.toLocaleString()}</span>
+                        <span className="text-[10px] text-[#6e7975] ml-1">/total</span>
+                      </div>
+                      <span className="text-[11px] text-[#6e7975]">
+                        {listing.bookingsCount} booking{listing.bookingsCount !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <span className="material-symbols-outlined text-[#6e7975] text-[64px]">sell</span>
+              <p className="text-[#181c1b] font-bold mt-2">No listings match your filter</p>
+              <p className="text-[#6e7975] text-[13px] mt-1 max-w-[240px]">Create an active listing so brands can book your available spaces.</p>
+              <button
+                onClick={() => { resetListingForm(); setCurrentView('create-listing'); }}
+                className="mt-4 bg-[#005344] text-white px-5 py-2 rounded-xl text-[14px] font-bold shadow-md hover:bg-[#003d32] transition-all"
+              >
+                Create Listing
+              </button>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={() => { resetListingForm(); setViewParams(null); setCurrentView('create-listing'); }}
+          className="absolute bottom-20 right-6 w-14 h-14 bg-[#fe6a34] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all z-40"
+        >
+          <span className="material-symbols-outlined text-[28px]">add</span>
+        </button>
+      </div>
+    );
+  }
+
+  // VIEW 2: Create Listing 4-Step Form
+  if (currentView === 'create-listing') {
+    const handleNext = () => {
+      if (newListingStep < 4) {
+        setNewListingStep(newListingStep + 1);
+      } else {
+        handleSaveListing();
+      }
+    };
+
+    const handlePrev = () => {
+      if (newListingStep > 1) {
+        setNewListingStep(newListingStep - 1);
+      } else {
+        resetListingForm();
+        setIsEditing(false);
+        setCurrentView('main');
+        setViewParams(null);
+      }
+    };
+
+    const handleSelectSpace = (spaceId) => {
+      setNewListingData(prev => ({ ...prev, spaceId }));
+    };
+
+    const selectedSpace = spaces.find(s => s.id === newListingData.spaceId);
+    
+    // Validations
+    const isStep1Valid = !!newListingData.spaceId;
+    
+    const isDurationValid = newListingData.durationMonths >= 1 && newListingData.durationMonths <= 12;
+    const isStep2Valid = !!newListingData.startDate && !!newListingData.endDate && !!newListingData.totalPrice && isDurationValid;
+    
+    const isStep3Valid = !!newListingData.productPreference && newListingData.productPreference.trim().length > 10;
+    const isStep4Valid = true;
+
+    const getStepValidity = (step) => {
+      switch (step) {
+        case 1: return isStep1Valid;
+        case 2: return isStep2Valid;
+        case 3: return isStep3Valid;
+        case 4: return isStep4Valid;
+        default: return false;
+      }
+    };
+
+    return (
+      <div className="flex-grow flex flex-col relative h-full overflow-hidden bg-[#f7faf7] pb-20">
+        {/* Form Header */}
+        <div className="bg-white border-b border-[#e0e3e0] px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+          <button onClick={handlePrev} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#005344]">
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h1 className="text-[16px] font-black text-[#181c1b] text-center flex-grow">
+            {isEditing ? 'Edit Listing Offer' : 'Create New Listing'}
+          </h1>
+          <div className="w-8 h-8"></div>
+        </div>
+
+        {/* Step Progress Bar */}
+        <div className="bg-white border-b border-[#e0e3e0] px-6 py-3">
+          <div className="flex items-center justify-between relative">
+            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-[#e0e3e0] z-0"></div>
+            <div
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-[#005344] transition-all duration-300 z-0"
+              style={{ width: `${((newListingStep - 1) / 3) * 100}%` }}
+            ></div>
+
+            {[1, 2, 3, 4].map((stepNum) => (
+              <div
+                key={stepNum}
+                className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[12px] relative z-10 transition-all ${
+                  newListingStep === stepNum
+                    ? 'bg-[#005344] text-white ring-4 ring-[#005344]/10'
+                    : newListingStep > stepNum
+                    ? 'bg-[#005344] text-white'
+                    : 'bg-white text-[#6e7975] border border-[#e0e3e0]'
+                }`}
+              >
+                {newListingStep > stepNum ? (
+                  <span className="material-symbols-outlined text-[14px]">check</span>
+                ) : (
+                  stepNum
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between text-[10px] text-[#6e7975] font-semibold mt-1.5 px-0">
+            <span>Select Space</span>
+            <span>Duration & Price</span>
+            <span>Preference</span>
+            <span>Review</span>
+          </div>
+        </div>
+
+        {/* Form Body */}
+        <div className="flex-grow overflow-y-auto p-4">
+          {/* STEP 1: SELECT SPACE */}
+          {newListingStep === 1 && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-[18px] font-black text-[#181c1b]">Select a space from inventory</h2>
+                <p className="text-[13px] text-[#6e7975] mt-1">Only unlisted spaces can be commercialized. To list an already listed space, remove its existing listing first.</p>
+              </div>
+
+              {unlistedSpaces.length > 0 ? (
+                <div className="space-y-3">
+                  {unlistedSpaces.map((space) => {
+                    const isSelected = newListingData.spaceId === space.id;
+                    const mainPhoto = space.photos && space.photos.length > 0
+                      ? space.photos[0]
+                      : "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80";
+
+                    return (
+                      <div
+                        key={space.id}
+                        onClick={() => handleSelectSpace(space.id)}
+                        className={`p-3 rounded-xl border flex gap-3 items-center cursor-pointer transition-all relative ${
+                          isSelected
+                            ? 'border-[#005344] bg-[#005344]/5 ring-2 ring-[#005344]/15'
+                            : 'border-[#e0e3e0] bg-white hover:bg-gray-50'
+                        }`}
+                      >
+                        <img src={mainPhoto} alt="" className="w-12 h-12 rounded-lg object-cover bg-gray-100 flex-shrink-0" />
+                        <div className="flex-grow min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="bg-[#f0f3f0] text-[#005344] px-1 py-0.5 rounded text-[9px] font-black uppercase tracking-wider flex-shrink-0">
+                              {getSpaceTypeLabel(space.type)}
+                            </span>
+                            <span className="text-[13px] font-bold text-[#181c1b] truncate">{space.nickname}</span>
+                          </div>
+                          <span className="text-[11px] text-[#6e7975] block mt-0.5">
+                            Floor {space.floor} • Aisle {space.aisle || 'N/A'} • {space.dimensions.l}x{space.dimensions.w}cm
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 w-5 h-5 bg-[#005344] rounded-full flex items-center justify-center text-white">
+                            <span className="material-symbols-outlined text-[14px]">check</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center bg-white p-4 rounded-xl border border-[#e0e3e0]">
+                  <span className="material-symbols-outlined text-gray-300 text-[64px]">grid_view</span>
+                  <p className="text-[#181c1b] font-bold mt-2">All spaces are already listed</p>
+                  <p className="text-[#6e7975] text-[13px] mt-1 max-w-[280px]">Add a new space to your physical inventory or remove an active listing first.</p>
+                  <button
+                    onClick={() => navigateToView('inventory', 'main')}
+                    className="mt-4 bg-[#005344] text-white px-5 py-2.5 rounded-xl text-[13px] font-bold hover:bg-[#003d32] transition-all"
+                  >
+                    Go to Space Inventory
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 2: DURATION & PRICING */}
+          {newListingStep === 2 && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-[18px] font-black text-[#181c1b]">Listing duration & pricing</h2>
+                <p className="text-[13px] text-[#6e7975] mt-1">Specify how long this listing is available for booking, and set your price.</p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">Start Date*</label>
+                    <input
+                      type="date"
+                      value={newListingData.startDate}
+                      onChange={e => setNewListingData(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">End Date*</label>
+                    <input
+                      type="date"
+                      value={newListingData.endDate}
+                      onChange={e => setNewListingData(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
+                    />
+                  </div>
+                </div>
+
+                {/* Duration chip */}
+                {newListingData.startDate && newListingData.endDate && (
+                  <div className="flex items-center gap-2">
+                    <div className={`px-3 py-1.5 rounded-lg text-[12px] font-black flex items-center gap-1.5 ${
+                      isDurationValid ? 'bg-[#005344]/5 text-[#005344]' : 'bg-red-50 text-red-600 border border-red-100'
+                    }`}>
+                      <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                      {newListingData.durationLabel}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pricing */}
+                <div className="space-y-1">
+                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">Total Price (PKR)*</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-[#181c1b] text-[14px]">PKR</span>
+                    <input
+                      type="number"
+                      value={newListingData.totalPrice}
+                      onChange={e => setNewListingData(prev => ({ ...prev, totalPrice: e.target.value }))}
+                      placeholder="E.g., 120000"
+                      className="w-full bg-white border border-[#e0e3e0] py-3 pl-12 pr-4 rounded-xl text-[14px] font-bold outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
+                    />
+                  </div>
+                </div>
+
+                {/* Monthly breakdown preview */}
+                {newListingData.totalPrice && newListingData.durationMonths > 0 && (
+                  <div className="bg-gray-50 border border-[#e0e3e0] p-3 rounded-xl text-[13px] flex justify-between items-center">
+                    <span className="text-[#6e7975]">Estimated monthly payout:</span>
+                    <span className="font-bold text-[#005344] text-[15px]">PKR {Math.round(newListingData.totalPrice / newListingData.durationMonths).toLocaleString()} /mo</span>
+                  </div>
+                )}
+
+                {/* Validation Error Message */}
+                {newListingData.startDate && newListingData.endDate && !isDurationValid && (
+                  <p className="text-red-500 text-[11px] font-bold">
+                    * Listing duration must be between 1 and 12 months. Please adjust dates.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: PRODUCT PREFERENCE */}
+          {newListingStep === 3 && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-[18px] font-black text-[#181c1b]">Specify product preferences</h2>
+                <p className="text-[13px] text-[#6e7975] mt-1">Specify what kinds of products are acceptable for placement. This helps screen incompatible brand requests early.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">Product Restrictions & Preferences*</label>
+                <textarea
+                  rows={6}
+                  maxLength={500}
+                  value={newListingData.productPreference}
+                  onChange={e => setNewListingData(prev => ({ ...prev, productPreference: e.target.value }))}
+                  placeholder="E.g., FMCG foods only. Prefer beverage stacks or biscuit crates. Strictly no household cleaners or chemical items due to proximity to bakery section."
+                  className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
+                ></textarea>
+                <div className="text-[11px] text-[#6e7975] text-right font-medium">
+                  {newListingData.productPreference ? newListingData.productPreference.length : 0}/500 characters
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: REVIEW & SAVE */}
+          {newListingStep === 4 && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-[18px] font-black text-[#181c1b]">Review listing details</h2>
+                <p className="text-[13px] text-[#6e7975] mt-1">Once submitted, this offer will go to admins for security verification before showing up on the marketplace.</p>
+              </div>
+
+              <div className="space-y-3">
+                {/* Space Summary */}
+                <div className="bg-white rounded-xl border border-[#e0e3e0] p-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                  <h3 className="text-[11px] font-black text-[#005344] uppercase tracking-wider mb-2">Space Details (Inventory)</h3>
+                  <div className="flex gap-3 items-center">
+                    <img
+                      src={selectedSpace?.photos && selectedSpace.photos.length > 0 ? selectedSpace.photos[0] : "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80"}
+                      alt=""
+                      className="w-12 h-12 object-cover rounded-lg bg-gray-100 flex-shrink-0"
+                    />
+                    <div>
+                      <span className="bg-[#f0f3f0] text-[#005344] px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
+                        {getSpaceTypeLabel(selectedSpace?.type)}
+                      </span>
+                      <h4 className="text-[13px] font-bold text-[#181c1b] mt-0.5">{selectedSpace?.nickname}</h4>
+                      <p className="text-[11px] text-[#6e7975] mt-0.5">Floor {selectedSpace?.floor} • Aisle {selectedSpace?.aisle || 'N/A'} • {selectedSpace?.section}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Offer details */}
+                <div className="bg-white rounded-xl border border-[#e0e3e0] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] space-y-3">
+                  <h3 className="text-[11px] font-black text-[#005344] uppercase tracking-wider border-b border-[#e0e3e0] pb-2">Listing Commercials</h3>
+                  
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[13px]">
+                    <div>
+                      <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Duration</span>
+                      <span className="font-bold text-[#181c1b]">{newListingData.durationLabel}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Total Rental Fee</span>
+                      <span className="font-bold text-[#181c1b] text-[#005344]">PKR {parseInt(newListingData.totalPrice).toLocaleString()}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Monthly Payout P/M</span>
+                      <span className="font-bold text-[#181c1b]">PKR {newListingData.pricePerMonth.toLocaleString()} /month</span>
+                    </div>
+                    <div className="col-span-2 border-t border-[#e0e3e0] pt-2.5">
+                      <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Acceptable Products</span>
+                      <span className="text-[#181c1b] italic">{newListingData.productPreference}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[#ffab00]/5 border border-[#ffab00]/20 rounded-xl p-3 text-[11px] text-[#ab6b00] font-semibold flex gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-[#ab6b00]">info</span>
+                  <div>
+                    Admins usually approve commercial listings in 24–48 hours after ensuring safety standards are met.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-[#e0e3e0] z-20 flex gap-3">
+          <button
+            onClick={handlePrev}
+            className="flex-grow py-3 border border-[#005344] text-[#005344] rounded-xl text-[14px] font-bold hover:bg-[#005344]/5 transition-all text-center flex items-center justify-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+            {newListingStep === 1 ? 'Cancel' : 'Back'}
+          </button>
+
+          <button
+            onClick={handleNext}
+            disabled={!getStepValidity(newListingStep)}
+            className={`flex-grow py-3 rounded-xl text-[14px] font-bold transition-all text-center flex items-center justify-center gap-1.5 ${
+              getStepValidity(newListingStep)
+                ? 'bg-[#005344] text-white hover:bg-[#003d32]'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            {newListingStep === 4 ? 'Submit Listing' : 'Continue'}
+            {newListingStep < 4 && <span className="material-symbols-outlined text-[16px]">arrow_forward</span>}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // VIEW 3: Listing Detail view
+  if (currentView === 'listing-detail') {
+    const listing = listings.find(l => l.id === viewParams);
+
+    if (!listing) {
+      return (
+        <div className="p-4 text-center">
+          <p>Listing not found.</p>
+          <button onClick={() => setCurrentView('main')} className="mt-2 text-[#005344] font-bold">Go back</button>
+        </div>
+      );
+    }
+
+    const space = spaces.find(s => s.id === listing.spaceId);
+    const relatedRequests = requests.filter(r => r.listingId === listing.id);
+
+    const handleRemoveListing = () => {
+      // Set space status back to Unlisted
+      setSpaces(prev => prev.map(s => s.id === listing.spaceId ? { ...s, status: 'Unlisted', listingId: null } : s));
+      // Remove listing
+      setListings(prev => prev.filter(l => l.id !== listing.id));
+      pushNotification(
+        'admin',
+        'Listing Removed',
+        `Commercial listing for "${space?.nickname}" has been removed.`,
+        { tab: 'listings', view: 'main' }
+      );
+      setCurrentView('main');
+    };
+
+    return (
+      <div className="flex-grow flex flex-col relative h-full overflow-hidden bg-[#f7faf7]">
+        {/* Detail Header */}
+        <div className="bg-white border-b border-[#e0e3e0] px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+          <button onClick={() => setCurrentView('main')} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#005344]">
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h1 className="text-[16px] font-black text-[#181c1b] text-center flex-grow">Listing Detail</h1>
+          <div className="w-8 h-8"></div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-grow overflow-y-auto p-4 pb-12 space-y-4">
+          {/* Photo */}
+          <div className="w-full h-48 rounded-xl overflow-hidden border border-[#e0e3e0] bg-white relative">
+            <img
+              src={listing.photo || "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80"}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Title block */}
+          <div className="bg-white p-4 rounded-xl border border-[#e0e3e0] shadow-[0_2px_12px_rgba(0,0,0,0.04)] space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="bg-[#f0f3f0] text-[#005344] px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wider">
+                {getSpaceTypeLabel(space?.type)}
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadgeClass(listing.status)}`}>
+                {listing.status}
+              </span>
+              {listing.verified && (
+                <span className="bg-[#00875a]/10 text-[#00875a] border border-[#00875a]/20 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-0.5">
+                  <span className="material-symbols-outlined text-[12px]">verified</span> Verified Space
+                </span>
+              )}
+            </div>
+            
+            <h2 className="text-[18px] font-black text-[#181c1b]">{space?.nickname || 'Unknown Space'}</h2>
+            
+            <div className="pt-2 flex justify-between items-baseline border-t border-[#e0e3e0]">
+              <div>
+                <span className="text-[#6e7975] text-[11px] block font-bold uppercase tracking-wider">Listing Total Price</span>
+                <span className="text-[20px] font-black text-[#005344]">PKR {listing.totalPrice.toLocaleString()}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[#6e7975] text-[11px] block font-bold uppercase tracking-wider">Per Month</span>
+                <span className="text-[14px] font-bold text-[#181c1b]">PKR {listing.pricePerMonth.toLocaleString()} /mo</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Listing specific details */}
+          <div className="bg-white p-4 rounded-xl border border-[#e0e3e0] shadow-[0_2px_12px_rgba(0,0,0,0.04)] space-y-3">
+            <h3 className="text-[12px] font-black text-[#005344] uppercase tracking-wider">Offer Summary</h3>
+            <div className="grid grid-cols-2 gap-3 text-[13px]">
+              <div>
+                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Duration Offer</span>
+                <span className="font-bold text-[#181c1b]">{listing.durationLabel}</span>
+              </div>
+              <div>
+                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Physical Dimensions</span>
+                <span className="font-bold text-[#181c1b]">{space?.dimensions.l}x{space?.dimensions.w}x{space?.dimensions.h} {space?.dimensions.unit}</span>
+              </div>
+            </div>
+            <div className="border-t border-[#e0e3e0] pt-2">
+              <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Product Preferences</span>
+              <p className="text-[#181c1b] text-[13px] italic mt-0.5">{listing.productPreference}</p>
+            </div>
+          </div>
+
+          {/* Active bookings count */}
+          <div className="bg-white p-3 rounded-xl border border-[#e0e3e0] shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex justify-between items-center text-[13px]">
+            <span className="font-semibold text-[#181c1b]">Total active bookings:</span>
+            <span className="bg-[#005344] text-white px-2 py-0.5 rounded-full font-black text-[11px]">
+              {listing.bookingsCount} Active
+            </span>
+          </div>
+
+          {/* Related Requests */}
+          {relatedRequests.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-[12px] font-black text-[#005344] uppercase tracking-wider pl-1">Placement Bookings & Requests</h3>
+              <div className="space-y-2">
+                {relatedRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    onClick={() => navigateToView('requests', 'booking-detail', req.id)}
+                    className="p-3 bg-white border border-[#e0e3e0] rounded-xl flex items-center justify-between shadow-sm cursor-pointer hover:border-[#005344]"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-white text-[11px] ${req.logoBg || 'bg-[#005344]'}`}>
+                          {req.logo}
+                        </span>
+                        <span className="font-bold text-[13px] text-[#181c1b]">{req.brand}</span>
+                      </div>
+                      <span className="text-[11px] text-[#6e7975] block mt-0.5">{req.requestedDates}</span>
+                    </div>
+                    <span className="material-symbols-outlined text-[#6e7975] text-[18px]">chevron_right</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button
+              onClick={() => {
+                resetListingForm();
+                setCurrentView('create-listing');
+                setViewParams(listing.id);
+              }}
+              className="py-3 border border-[#005344] text-[#005344] rounded-xl text-[13px] font-black hover:bg-[#005344]/5 transition-all text-center flex items-center justify-center gap-1.5 bg-white"
+            >
+              <span className="material-symbols-outlined text-[16px]">edit</span>
+              Edit Listing
+            </button>
+            <button
+              onClick={handleRemoveListing}
+              className="py-3 border border-[#de350b] text-[#de350b] hover:bg-[#de350b]/5 rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 bg-white"
+            >
+              <span className="material-symbols-outlined text-[16px]">delete</span>
+              Remove Offer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 
 import Register from './pages/Register'
 import Verify from './pages/Verify'
@@ -17,6 +17,9 @@ import CompanyOnboardingStep3 from './pages/company/CompanyOnboardingStep3'
 import Dashboard from './pages/Dashboard'
 
 function App() {
+  const location = useLocation();
+  const isDashboard = location.pathname.startsWith('/dashboard');
+
   return (
     <div className="min-h-screen bg-gray-200 flex items-center justify-center py-4 sm:py-8 font-manrope">
       {/* Mobile Device Simulator Frame */}
@@ -28,7 +31,7 @@ function App() {
         </div>
 
         {/* Scrollable App Content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden pt-6 relative bg-background">
+        <div className={`flex-1 ${isDashboard ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'} overflow-x-hidden pt-6 relative bg-background`}>
           <Routes>
             <Route path="/" element={<Register />} />
             <Route path="/verify" element={<Verify />} />
