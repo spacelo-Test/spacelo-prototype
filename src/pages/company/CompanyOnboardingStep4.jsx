@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { STORAGE_KEYS } from '../../lib/constants';
 
 export default function CompanyOnboardingStep4() {
   const navigate = useNavigate();
@@ -154,14 +155,21 @@ export default function CompanyOnboardingStep4() {
               <span className="material-symbols-outlined text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             </div>
             
-            <h2 className="text-[22px] font-bold text-[#181c1b] mb-2">Awaiting Admin Approval</h2>
+            <h2 className="text-[22px] font-bold text-[#181c1b] mb-2">Profile Created!</h2>
             <p className="text-[14px] text-[#3e4945] mb-6">
-              Your Company/Brand application has been submitted securely and is pending admin approval. Please click the button below to return to the login page.
+              Your profile has been created successfully. Proceed to the dashboard to start exploring and booking retail spaces.
             </p>
             
             <div className="w-full space-y-3">
-              <button onClick={() => navigate('/login')} className="w-full bg-[#005344] text-white py-3 rounded-lg text-[14px] font-bold shadow-md hover:bg-[#006d5b] active:scale-95 transition-all">
-                Return to Login
+              <button 
+                onClick={() => {
+                  localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
+                  localStorage.setItem(STORAGE_KEYS.USER_ROLE, 'Company/Brand');
+                  navigate('/dashboard');
+                }} 
+                className="w-full bg-[#005344] text-white py-3 rounded-lg text-[14px] font-bold shadow-md hover:bg-[#006d5b] active:scale-95 transition-all"
+              >
+                Go to Dashboard
               </button>
             </div>
           </div>

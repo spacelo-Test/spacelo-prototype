@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShopkeeperProvider } from './shopkeeper/dashboard/ShopkeeperContext';
 import DashboardShell from './shopkeeper/dashboard/DashboardShell';
+import { CompanyProvider } from './company/dashboard/CompanyContext';
+import CompanyDashboardShell from './company/dashboard/CompanyDashboardShell';
 import { STORAGE_KEYS } from '../lib/constants';
 
 export default function Dashboard() {
@@ -268,6 +270,14 @@ export default function Dashboard() {
   }
 
   // Approved: Render the fully state-managed, modular app
+  if (userRole === 'Company/Brand') {
+    return (
+      <CompanyProvider>
+        <CompanyDashboardShell handleLogout={handleLogout} />
+      </CompanyProvider>
+    );
+  }
+
   return (
     <ShopkeeperProvider>
       <DashboardShell handleLogout={handleLogout} />
