@@ -16,7 +16,8 @@ function roleColor(role) {
   switch (role) {
     case 'Shopkeeper': return '#005344';
     case 'Mall Owner':  return '#fe6a34';
-    case 'Company':     return '#00875a';
+    case 'Company':
+    case 'Company/Brand': return '#00875a';
     default:            return '#6e7975';
   }
 }
@@ -26,6 +27,7 @@ function RoleBadge({ role }) {
     Shopkeeper: 'bg-[#005344]/10 text-[#005344]',
     'Mall Owner': 'bg-[#fe6a34]/10 text-[#fe6a34]',
     Company: 'bg-[#00875a]/10 text-[#00875a]',
+    'Company/Brand': 'bg-[#00875a]/10 text-[#00875a]',
   };
   return (
     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${colors[role] || 'bg-gray-100 text-gray-500'}`}>

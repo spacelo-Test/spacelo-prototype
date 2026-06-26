@@ -13,7 +13,6 @@ export default function Dashboard() {
   const chainName = localStorage.getItem(STORAGE_KEYS.CHAIN_NAME) || 'Imtiaz Supermarket';
 
   const [isApproved, setIsApproved] = useState(() => {
-    if (userRole === 'Shopkeeper') return true;
     const status = localStorage.getItem(`spacelo_status_${userEmail}`);
     return status === 'approved';
   });
@@ -33,8 +32,6 @@ export default function Dashboard() {
 
   // Poll for admin approval updates
   useEffect(() => {
-    if (userRole === 'Shopkeeper') return;
-
     const interval = setInterval(() => {
       const status = localStorage.getItem(`spacelo_status_${userEmail}`);
       if (status === 'approved') {
@@ -44,7 +41,7 @@ export default function Dashboard() {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [userEmail, userRole]);
+  }, [userEmail]);
 
   const isMallOwner = userRole === 'Mall Owner';
 
@@ -93,7 +90,15 @@ export default function Dashboard() {
     };
 
     const currentPending = JSON.parse(localStorage.getItem('spacelo_pending_approvals') || '[]');
-    if (!currentPending.some(p => p.email === newApproval.email)) {
+    const existingIndex = currentPending.findIndex(p => p.email === newApproval.email);
+    if (existingIndex > -1) {
+      currentPending[existingIndex] = {
+        ...currentPending[existingIndex],
+        ...newApproval,
+        id: currentPending[existingIndex].id
+      };
+      localStorage.setItem('spacelo_pending_approvals', JSON.stringify(currentPending));
+    } else {
       localStorage.setItem('spacelo_pending_approvals', JSON.stringify([...currentPending, newApproval]));
     }
 
@@ -298,6 +303,41 @@ export default function Dashboard() {
                 onClick={() => {
                   localStorage.setItem('mallVerificationSubmitted', 'true');
                   localStorage.setItem(`spacelo_status_${userEmail}`, 'approved');
+                  
+                  // Also update the status in the spacelo_pending_approvals array
+                  const currentPending = JSON.parse(localStorage.getItem('spacelo_pending_approvals') || '[]');
+                  const updatedPending = currentPending.map(p => 
+                    p.email === userEmail ? { ...p, status: 'approved' } : p
+                  );
+                  localStorage.setItem('spacelo_pending_approvals', JSON.stringify(updatedPending));
+
+                  // Also add to verified active users list if not already present
+                  const pendingUser = currentPending.find(p => p.email === userEmail);
+                  if (pendingUser) {
+                    const currentUsers = JSON.parse(localStorage.getItem('spacelo_users') || '[]');
+                    const exists = currentUsers.some(u => u.email === userEmail);
+                    if (!exists) {
+                      const newUser = {
+                        id: 'usr_' + Date.now(),
+                        name: pendingUser.name,
+                        role: pendingUser.role,
+                        email: pendingUser.email,
+                        phone: pendingUser.phone || '',
+                        status: 'Active',
+                        joinedAt: 'June 2026',
+                        totalBookings: 0,
+                        totalRevenue: 0,
+                        verified: true
+                      };
+                      localStorage.setItem('spacelo_users', JSON.stringify([...currentUsers, newUser]));
+                    } else {
+                      const updatedUsers = currentUsers.map(u => 
+                        u.email === userEmail ? { ...u, status: 'Active', verified: true } : u
+                      );
+                      localStorage.setItem('spacelo_users', JSON.stringify(updatedUsers));
+                    }
+                  }
+
                   setIsApproved(true);
                 }}
                 className="w-full bg-[#fe6a34] hover:bg-[#e05620] text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-[14px]"

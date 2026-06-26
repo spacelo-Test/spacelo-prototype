@@ -193,16 +193,14 @@ function EmptyState() {
 export default function UsersScreen() {
   const { users = [], suspendUser, activateUser, approveUser } = useAdmin();
 
-  // Local mirror for optimistic status updates
-  const [localUsers, setLocalUsers] = useState(users);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
 
-  const totalCount = localUsers.length;
+  const totalCount = users.length;
 
   // ── filter logic ───────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
-    let list = localUsers;
+    let list = users;
 
     // Tab filter
     if (activeTab === 'Suspended') {
@@ -222,28 +220,19 @@ export default function UsersScreen() {
     }
 
     return list;
-  }, [localUsers, activeTab, searchQuery]);
+  }, [users, activeTab, searchQuery]);
 
   // ── handlers ───────────────────────────────────────────────────────────────
   function handleSuspend(id) {
     suspendUser?.(id);
-    setLocalUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, status: 'Suspended' } : u))
-    );
   }
 
   function handleActivate(id) {
     activateUser?.(id);
-    setLocalUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, status: 'Active' } : u))
-    );
   }
 
   function handleApprove(id) {
     approveUser?.(id);
-    setLocalUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, status: 'Active' } : u))
-    );
   }
 
   return (

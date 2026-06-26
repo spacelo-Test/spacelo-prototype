@@ -524,16 +524,59 @@ export function CompanyProvider({ children }) {
   };
 
   const raiseDispute = (reqId, reason, detail) => {
-    setRequests(prev => prev.map(req => {
-      if (req.id === reqId) {
-        return { 
-          ...req, 
-          status: 'Disputed',
-          dispute: { reason, detail, time: 'Just now', status: 'Open' }
-        };
-      }
-      return req;
-    }));
+    let spaceName = "Retail Space";
+    let brandName = "Nestlé";
+    let brandLogo = "N";
+    let brandLogoBg = "bg-red-600";
+
+    setRequests(prev => {
+      const next = prev.map(req => {
+        if (req.id === reqId) {
+          brandName = req.brand || "Nestlé";
+          brandLogo = req.logo || "N";
+          brandLogoBg = req.logoBg || "bg-red-600";
+          
+          const space = spaces.find(s => s.id === req.spaceId);
+          if (space) {
+            spaceName = space.nickname || space.name || "Retail Space";
+          }
+          return { 
+            ...req, 
+            status: 'Disputed',
+            dispute: { reason, detail, time: 'Just now', status: 'Open' }
+          };
+        }
+        return req;
+      });
+      localStorage.setItem('spacelo_requests', JSON.stringify(next));
+      return next;
+    });
+
+    // Write to spacelo_disputes in localStorage
+    const savedDisputes = JSON.parse(localStorage.getItem('spacelo_disputes') || '[]');
+    const newDisputeId = savedDisputes.length > 0 ? Math.max(...savedDisputes.map(d => Number(d.id) || 0)) + 1 : 1;
+    const newDispute = {
+      id: newDisputeId,
+      requestId: reqId,
+      shopkeeper: 'Ahmed Raza', // Fallback default shopkeeper name
+      brand: brandName,
+      logo: brandLogo,
+      logoBg: brandLogoBg,
+      space: spaceName,
+      spaceName: spaceName,
+      reason: reason,
+      detail: detail,
+      raisedBy: 'Brand',
+      raisedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      status: "Open",
+      priority: "High",
+      timeline: [
+        { event: `Dispute raised by ${brandName}`, time: "Just now", by: "company" },
+        { event: "24-hour resolution window started", time: "Just now", by: "system" }
+      ]
+    };
+    localStorage.setItem('spacelo_disputes', JSON.stringify([...savedDisputes, newDispute]));
   };
 
   const cancelBooking = (reqId) => {

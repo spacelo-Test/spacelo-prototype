@@ -149,35 +149,28 @@ function EmptyState({ filter }) {
 // ─── main screen ──────────────────────────────────────────────────────────────
 
 export default function DisputesScreen() {
-  const { disputes = [], resolveDispute } = useAdmin();
+  const { disputes = [], resolveDispute, markDisputeUnderReview } = useAdmin();
 
-  // Mirror context disputes in local state so we can update status optimistically
-  const [localDisputes, setLocalDisputes] = useState(disputes);
   const [activeTab, setActiveTab] = useState('All');
 
   // ── computed summary counts ────────────────────────────────────────────────
-  const openCount     = localDisputes.filter((d) => d.status === 'Open').length;
-  const reviewCount   = localDisputes.filter((d) => d.status === 'Under Review').length;
-  const resolvedCount = localDisputes.filter((d) => d.status === 'Resolved').length;
+  const openCount     = disputes.filter((d) => d.status === 'Open').length;
+  const reviewCount   = disputes.filter((d) => d.status === 'Under Review').length;
+  const resolvedCount = disputes.filter((d) => d.status === 'Resolved').length;
 
   // ── filtered list ──────────────────────────────────────────────────────────
   const filtered =
     activeTab === 'All'
-      ? localDisputes
-      : localDisputes.filter((d) => d.status === activeTab);
+      ? disputes
+      : disputes.filter((d) => d.status === activeTab);
 
   // ── handlers ───────────────────────────────────────────────────────────────
   function handleMarkUnderReview(id) {
-    setLocalDisputes((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, status: 'Under Review' } : d))
-    );
+    markDisputeUnderReview?.(id);
   }
 
   function handleResolve(id) {
     resolveDispute?.(id);
-    setLocalDisputes((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, status: 'Resolved' } : d))
-    );
   }
 
   return (

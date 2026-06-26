@@ -6,12 +6,14 @@ import DisputesScreen from './screens/DisputesScreen';
 import UsersScreen from './screens/UsersScreen';
 import ChainsScreen from './screens/ChainsScreen';
 import BookingsScreen from './screens/BookingsScreen';
+import PendingListingsScreen from './screens/PendingListingsScreen';
 
 // ─── Nav Items Config ─────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
   { key: 'overview',  label: 'Overview',           icon: 'home' },
   { key: 'approvals', label: 'Pending Approvals',   icon: 'hourglass_empty', badgeKey: 'pendingApprovals' },
+  { key: 'listings',  label: 'Listing Approvals',   icon: 'list_alt',        badgeKey: 'pendingListings' },
   { key: 'disputes',  label: 'Disputes',            icon: 'warning',         badgeKey: 'openDisputes' },
   { key: 'users',     label: 'Users',               icon: 'group' },
   { key: 'chains',    label: 'Chains',              icon: 'store' },
@@ -21,6 +23,7 @@ const NAV_ITEMS = [
 const PAGE_TITLES = {
   overview:  'Overview',
   approvals: 'Pending Approvals',
+  listings:  'Listing Approvals',
   disputes:  'Disputes',
   users:     'Users',
   chains:    'Chains',
@@ -33,6 +36,7 @@ function ActiveScreen({ tab }) {
   switch (tab) {
     case 'overview':  return <AdminOverview />;
     case 'approvals': return <PendingApprovalsScreen />;
+    case 'listings':  return <PendingListingsScreen />;
     case 'disputes':  return <DisputesScreen />;
     case 'users':     return <UsersScreen />;
     case 'chains':    return <ChainsScreen />;

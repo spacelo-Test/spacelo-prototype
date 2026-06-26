@@ -12,6 +12,25 @@ export default function Register() {
     localStorage.setItem('userRole', role);
     localStorage.setItem('fullName', name);
     localStorage.setItem('userEmail', email);
+
+    // Register a pending approval request immediately upon registration
+    const newApproval = {
+      id: 'u_' + Date.now(),
+      name: name,
+      role: role,
+      email: email,
+      phone: '',
+      businessName: role === 'Shopkeeper' ? 'Pending Store Profile' : (role === 'Mall Owner' ? 'Pending Mall Profile' : 'Pending Brand Profile'),
+      submittedAt: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      status: 'pending',
+      docs: role === 'Company/Brand' ? ['Company Registration', 'Brand Authorization'] : (role === 'Mall Owner' ? ['SECP License', 'Chain Affiliation', 'NTN Certificate'] : ['CNIC Front', 'CNIC Back', 'Trade License'])
+    };
+
+    const currentPending = JSON.parse(localStorage.getItem('spacelo_pending_approvals') || '[]');
+    if (!currentPending.some(p => p.email === email)) {
+      localStorage.setItem('spacelo_pending_approvals', JSON.stringify([...currentPending, newApproval]));
+    }
+
     navigate('/verify');
   };
 

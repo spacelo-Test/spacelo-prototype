@@ -4,7 +4,7 @@ import DisputeTimer from './DisputeTimer';
 
 /* ── Disputes Detail View ───────────────────────────────────────────────────── */
 function DisputeDetail({ disputeId, onBack }) {
-  const { disputes, setDisputes, navigateToView } = useShopkeeper();
+  const { disputes, setDisputes, requests, setRequests, navigateToView } = useShopkeeper();
   const [hasReUploaded, setHasReUploaded] = useState(false);
   const dispute = disputes.find(d => Number(d.id) === Number(disputeId));
 
@@ -14,6 +14,23 @@ function DisputeDetail({ disputeId, onBack }) {
     setDisputes(prev =>
       prev.map(d => Number(d.id) === Number(disputeId) ? { ...d, status: 'Resolved', timeline: [...d.timeline, { event: 'Dispute resolved by shopkeeper', time: 'Just now', by: 'shopkeeper' }] } : d)
     );
+    
+    // Also update associated request status to 'Active' and its inner dispute to 'Resolved'
+    if (dispute) {
+      setRequests(prev =>
+        prev.map(req => {
+          if (req.id === dispute.requestId) {
+            return {
+              ...req,
+              status: 'Active',
+              dispute: req.dispute ? { ...req.dispute, status: 'Resolved' } : null
+            };
+          }
+          return req;
+        })
+      );
+    }
+    
     onBack();
   };
 

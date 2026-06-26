@@ -303,26 +303,146 @@ export function AdminProvider({ children }) {
     return saved ? JSON.parse(saved) : DEFAULT_BOOKINGS;
   });
 
-  /* ── 6. Save back to localStorage ── */
+  /* ── 6. Listings ── */
+  const [listings, setListings] = useState(() => {
+    const saved = localStorage.getItem('spacelo_listings');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  /* ── 7. Spaces ── */
+  const [spaces, setSpaces] = useState(() => {
+    const saved = localStorage.getItem('spacelo_spaces');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   useEffect(() => {
-    localStorage.setItem('spacelo_pending_approvals', JSON.stringify(pendingApprovals));
+    const serialized = JSON.stringify(pendingApprovals);
+    if (localStorage.getItem('spacelo_pending_approvals') !== serialized) {
+      localStorage.setItem('spacelo_pending_approvals', serialized);
+    }
   }, [pendingApprovals]);
 
   useEffect(() => {
-    localStorage.setItem('spacelo_disputes', JSON.stringify(disputes));
+    const serialized = JSON.stringify(disputes);
+    if (localStorage.getItem('spacelo_disputes') !== serialized) {
+      localStorage.setItem('spacelo_disputes', serialized);
+    }
   }, [disputes]);
 
   useEffect(() => {
-    localStorage.setItem('spacelo_users', JSON.stringify(users));
+    const serialized = JSON.stringify(users);
+    if (localStorage.getItem('spacelo_users') !== serialized) {
+      localStorage.setItem('spacelo_users', serialized);
+    }
   }, [users]);
 
   useEffect(() => {
-    localStorage.setItem('spacelo_chains', JSON.stringify(chains));
+    const serialized = JSON.stringify(chains);
+    if (localStorage.getItem('spacelo_chains') !== serialized) {
+      localStorage.setItem('spacelo_chains', serialized);
+    }
   }, [chains]);
 
   useEffect(() => {
-    localStorage.setItem('spacelo_bookings', JSON.stringify(bookings));
+    const serialized = JSON.stringify(bookings);
+    if (localStorage.getItem('spacelo_bookings') !== serialized) {
+      localStorage.setItem('spacelo_bookings', serialized);
+    }
   }, [bookings]);
+
+  useEffect(() => {
+    const serialized = JSON.stringify(listings);
+    if (localStorage.getItem('spacelo_listings') !== serialized) {
+      localStorage.setItem('spacelo_listings', serialized);
+    }
+  }, [listings]);
+
+  useEffect(() => {
+    const serialized = JSON.stringify(spaces);
+    if (localStorage.getItem('spacelo_spaces') !== serialized) {
+      localStorage.setItem('spacelo_spaces', serialized);
+    }
+  }, [spaces]);
+
+  // ── 8. Cross-tab & Route Syncing via storage event and polling ──
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'spacelo_pending_approvals' && e.newValue) {
+        const parsed = JSON.parse(e.newValue);
+        setPendingApprovals((prev) => JSON.stringify(prev) !== e.newValue ? parsed : prev);
+      }
+      if (e.key === 'spacelo_disputes' && e.newValue) {
+        const parsed = JSON.parse(e.newValue);
+        setDisputes((prev) => JSON.stringify(prev) !== e.newValue ? parsed : prev);
+      }
+      if (e.key === 'spacelo_users' && e.newValue) {
+        const parsed = JSON.parse(e.newValue);
+        setUsers((prev) => JSON.stringify(prev) !== e.newValue ? parsed : prev);
+      }
+      if (e.key === 'spacelo_chains' && e.newValue) {
+        const parsed = JSON.parse(e.newValue);
+        setChains((prev) => JSON.stringify(prev) !== e.newValue ? parsed : prev);
+      }
+      if (e.key === 'spacelo_bookings' && e.newValue) {
+        const parsed = JSON.parse(e.newValue);
+        setBookings((prev) => JSON.stringify(prev) !== e.newValue ? parsed : prev);
+      }
+      if (e.key === 'spacelo_listings' && e.newValue) {
+        const parsed = JSON.parse(e.newValue);
+        setListings((prev) => JSON.stringify(prev) !== e.newValue ? parsed : prev);
+      }
+      if (e.key === 'spacelo_spaces' && e.newValue) {
+        const parsed = JSON.parse(e.newValue);
+        setSpaces((prev) => JSON.stringify(prev) !== e.newValue ? parsed : prev);
+      }
+    };
+
+    const pollLocalStorage = () => {
+      const savedPending = localStorage.getItem('spacelo_pending_approvals');
+      if (savedPending) {
+        const parsed = JSON.parse(savedPending);
+        setPendingApprovals((prev) => JSON.stringify(prev) !== savedPending ? parsed : prev);
+      }
+      const savedDisputes = localStorage.getItem('spacelo_disputes');
+      if (savedDisputes) {
+        const parsed = JSON.parse(savedDisputes);
+        setDisputes((prev) => JSON.stringify(prev) !== savedDisputes ? parsed : prev);
+      }
+      const savedUsers = localStorage.getItem('spacelo_users');
+      if (savedUsers) {
+        const parsed = JSON.parse(savedUsers);
+        setUsers((prev) => JSON.stringify(prev) !== savedUsers ? parsed : prev);
+      }
+      const savedChains = localStorage.getItem('spacelo_chains');
+      if (savedChains) {
+        const parsed = JSON.parse(savedChains);
+        setChains((prev) => JSON.stringify(prev) !== savedChains ? parsed : prev);
+      }
+      const savedBookings = localStorage.getItem('spacelo_bookings');
+      if (savedBookings) {
+        const parsed = JSON.parse(savedBookings);
+        setBookings((prev) => JSON.stringify(prev) !== savedBookings ? parsed : prev);
+      }
+      const savedListings = localStorage.getItem('spacelo_listings');
+      if (savedListings) {
+        const parsed = JSON.parse(savedListings);
+        setListings((prev) => JSON.stringify(prev) !== savedListings ? parsed : prev);
+      }
+      const savedSpaces = localStorage.getItem('spacelo_spaces');
+      if (savedSpaces) {
+        const parsed = JSON.parse(savedSpaces);
+        setSpaces((prev) => JSON.stringify(prev) !== savedSpaces ? parsed : prev);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(pollLocalStorage, 1500);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   /* ─────────────────────────────────────────────
      Action functions
@@ -330,25 +450,28 @@ export function AdminProvider({ children }) {
 
   /** Approve a pending user approval */
   function approveUser(id) {
-    setPendingApprovals((prev) =>
-      prev.map((u) => {
+    setPendingApprovals((prev) => {
+      const next = prev.map((u) => {
         if (u.id === id) {
           localStorage.setItem(`spacelo_status_${u.email}`, 'approved');
           return { ...u, status: 'approved' };
         }
         return u;
-      })
-    );
+      });
+      localStorage.setItem('spacelo_pending_approvals', JSON.stringify(next));
+      return next;
+    });
 
     // Also add to verified active users list if not already present
     const pendingUser = pendingApprovals.find(u => u.id === id);
     if (pendingUser) {
       setUsers((prev) => {
         const exists = prev.some(u => u.email === pendingUser.email);
+        let next;
         if (exists) {
-          return prev.map(u => u.email === pendingUser.email ? { ...u, status: 'Active', verified: true } : u);
+          next = prev.map(u => u.email === pendingUser.email ? { ...u, status: 'Active', verified: true } : u);
         } else {
-          return [
+          next = [
             ...prev,
             {
               id: 'usr_' + Date.now(),
@@ -364,54 +487,190 @@ export function AdminProvider({ children }) {
             }
           ];
         }
+        localStorage.setItem('spacelo_users', JSON.stringify(next));
+        return next;
       });
+
+      // Also add to chains list if user is a Mall Owner
+      if (pendingUser.role === 'Mall Owner') {
+        setChains((prev) => {
+          const cName = pendingUser.chainName || pendingUser.businessName || 'New Mall Chain';
+          const exists = prev.some(c => c.name.toLowerCase() === cName.toLowerCase());
+          let next;
+          if (exists) {
+            next = prev.map(c => c.name.toLowerCase() === cName.toLowerCase() ? { ...c, branches: (c.branches || 1) + 1 } : c);
+          } else {
+            next = [
+              ...prev,
+              {
+                id: 'c_' + Date.now(),
+                name: cName,
+                owner: pendingUser.name,
+                branches: 1,
+                city: 'Karachi',
+                status: 'Active',
+                totalListings: 0,
+                monthlyRevenue: 0,
+                joinedAt: 'June 2026'
+              }
+            ];
+          }
+          localStorage.setItem('spacelo_chains', JSON.stringify(next));
+          return next;
+        });
+      }
     }
   }
 
   /** Reject a pending user approval */
   function rejectUser(id) {
-    setPendingApprovals((prev) =>
-      prev.map((u) => {
+    setPendingApprovals((prev) => {
+      const next = prev.map((u) => {
         if (u.id === id) {
           localStorage.setItem(`spacelo_status_${u.email}`, 'rejected');
           return { ...u, status: 'rejected' };
         }
         return u;
-      })
-    );
+      });
+      localStorage.setItem('spacelo_pending_approvals', JSON.stringify(next));
+      return next;
+    });
   }
 
   /** Resolve an open dispute */
   function resolveDispute(id) {
-    setDisputes((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, status: 'Resolved' } : d))
-    );
+    setDisputes((prev) => {
+      const next = prev.map((d) => {
+        if (d.id === id) {
+          // Update associated request in spacelo_requests
+          const reqId = d.requestId;
+          const savedReqs = localStorage.getItem('spacelo_requests');
+          if (savedReqs) {
+            try {
+              const reqList = JSON.parse(savedReqs);
+              const nextReqList = reqList.map(r => {
+                if (Number(r.id) === Number(reqId)) {
+                  return {
+                    ...r,
+                    status: 'Active',
+                    dispute: r.dispute ? { ...r.dispute, status: 'Resolved' } : null
+                  };
+                }
+                return r;
+              });
+              localStorage.setItem('spacelo_requests', JSON.stringify(nextReqList));
+            } catch (e) {
+              console.error("Failed to parse spacelo_requests during dispute resolution", e);
+            }
+          }
+          return { ...d, status: 'Resolved' };
+        }
+        return d;
+      });
+      localStorage.setItem('spacelo_disputes', JSON.stringify(next));
+      return next;
+    });
   }
 
-  /** Resolve an open dispute */
-  function resolveDispute(id) {
-    setDisputes((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, status: 'Resolved' } : d))
-    );
+  /** Mark a dispute under review */
+  function markDisputeUnderReview(id) {
+    setDisputes((prev) => {
+      const next = prev.map((d) => {
+        if (d.id === id) {
+          // Update associated request in spacelo_requests
+          const reqId = d.requestId;
+          const savedReqs = localStorage.getItem('spacelo_requests');
+          if (savedReqs) {
+            try {
+              const reqList = JSON.parse(savedReqs);
+              const nextReqList = reqList.map(r => {
+                if (Number(r.id) === Number(reqId)) {
+                  return {
+                    ...r,
+                    dispute: r.dispute ? { ...r.dispute, status: 'Under Review' } : null
+                  };
+                }
+                return r;
+              });
+              localStorage.setItem('spacelo_requests', JSON.stringify(nextReqList));
+            } catch (e) {
+              console.error("Failed to parse spacelo_requests during dispute under-review mark", e);
+            }
+          }
+          return { ...d, status: 'Under Review' };
+        }
+        return d;
+      });
+      localStorage.setItem('spacelo_disputes', JSON.stringify(next));
+      return next;
+    });
   }
 
   /** Suspend a user account */
   function suspendUser(id) {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, status: 'Suspended' } : u))
-    );
+    setUsers((prev) => {
+      const next = prev.map((u) => (u.id === id ? { ...u, status: 'Suspended' } : u));
+      localStorage.setItem('spacelo_users', JSON.stringify(next));
+      return next;
+    });
   }
 
   /** Activate a user account */
   function activateUser(id) {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, status: 'Active' } : u))
-    );
+    setUsers((prev) => {
+      const next = prev.map((u) => (u.id === id ? { ...u, status: 'Active' } : u));
+      localStorage.setItem('spacelo_users', JSON.stringify(next));
+      return next;
+    });
+  }
+
+  /** Approve a pending listing approval */
+  function approveListing(id) {
+    setListings((prev) => {
+      const next = prev.map((l) => {
+        if (Number(l.id) === Number(id)) {
+          return { ...l, status: 'Live', verified: true };
+        }
+        return l;
+      });
+      localStorage.setItem('spacelo_listings', JSON.stringify(next));
+      return next;
+    });
+  }
+
+  /** Reject a pending listing approval */
+  function rejectListing(id) {
+    setListings((prev) => {
+      const next = prev.map((l) => {
+        if (Number(l.id) === Number(id)) {
+          return { ...l, status: 'Inactive', verified: false };
+        }
+        return l;
+      });
+      localStorage.setItem('spacelo_listings', JSON.stringify(next));
+      return next;
+    });
+
+    // Reset space status back to 'Unlisted' and reset listingId to null
+    const listingObj = listings.find((l) => Number(l.id) === Number(id));
+    if (listingObj) {
+      const sId = listingObj.spaceId;
+      setSpaces((prev) => {
+        const next = prev.map((s) => {
+          if (Number(s.id) === Number(sId)) {
+            return { ...s, status: 'Unlisted', listingId: null };
+          }
+          return s;
+        });
+        localStorage.setItem('spacelo_spaces', JSON.stringify(next));
+        return next;
+      });
+    }
   }
 
   /* ─────────────────────────────────────────────
      Computed stats
-  ───────────────────────────────────────────── */
+   ───────────────────────────────────────────── */
   const adminStats = {
     totalUsers: users.length,
     pendingApprovals: pendingApprovals.filter((u) => u.status === 'pending').length,
@@ -420,11 +679,12 @@ export function AdminProvider({ children }) {
     totalBookings: bookings.length,
     totalRevenue: bookings.reduce((sum, b) => sum + b.amount, 0),
     totalCommission: bookings.reduce((sum, b) => sum + b.commission, 0),
+    pendingListings: listings.filter((l) => l.status === 'Pending Approval').length,
   };
 
   /* ─────────────────────────────────────────────
      Context value
-  ───────────────────────────────────────────── */
+   ───────────────────────────────────────────── */
   const contextValue = {
     /* State */
     pendingApprovals,
@@ -432,6 +692,8 @@ export function AdminProvider({ children }) {
     users,
     chains,
     bookings,
+    listings,
+    spaces,
 
     /* Setters (exposed for any direct manipulation) */
     setPendingApprovals,
@@ -439,13 +701,18 @@ export function AdminProvider({ children }) {
     setUsers,
     setChains,
     setBookings,
+    setListings,
+    setSpaces,
 
     /* Actions */
     approveUser,
     rejectUser,
     resolveDispute,
+    markDisputeUnderReview,
     suspendUser,
     activateUser,
+    approveListing,
+    rejectListing,
 
     /* Computed */
     adminStats,

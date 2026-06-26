@@ -201,16 +201,13 @@ export default function PendingApprovalsScreen() {
 
   const [activeTab, setActiveTab] = useState('All');
 
-  // Local set of IDs still awaiting action
-  const [pendingIds, setPendingIds] = useState(
-    () => new Set(pendingApprovals.map((u) => u.id))
-  );
-
   // Items that have been acted on in this session
   const [processed, setProcessed] = useState([]);
 
   // ── derived lists ──────────────────────────────────────────────────────────
-  const rawPending = pendingApprovals.filter((u) => pendingIds.has(u.id));
+  const rawPending = pendingApprovals.filter(
+    (u) => u.status === 'pending' && !processed.some((p) => p.id === u.id)
+  );
 
   const filteredPending =
     activeTab === 'All' ? rawPending : rawPending.filter((u) => u.role === activeTab);
@@ -226,11 +223,6 @@ export default function PendingApprovalsScreen() {
     const user = pendingApprovals.find((u) => u.id === id);
     if (user) {
       setProcessed((prev) => [...prev, { ...user, processedStatus: 'Approved' }]);
-      setPendingIds((prev) => {
-        const s = new Set(prev);
-        s.delete(id);
-        return s;
-      });
     }
   }
 
@@ -239,11 +231,6 @@ export default function PendingApprovalsScreen() {
     const user = pendingApprovals.find((u) => u.id === id);
     if (user) {
       setProcessed((prev) => [...prev, { ...user, processedStatus: 'Rejected' }]);
-      setPendingIds((prev) => {
-        const s = new Set(prev);
-        s.delete(id);
-        return s;
-      });
     }
   }
 

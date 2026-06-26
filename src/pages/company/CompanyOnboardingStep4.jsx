@@ -27,7 +27,15 @@ export default function CompanyOnboardingStep4() {
     };
 
     const currentPending = JSON.parse(localStorage.getItem('spacelo_pending_approvals') || '[]');
-    if (!currentPending.some(p => p.email === newApproval.email)) {
+    const existingIndex = currentPending.findIndex(p => p.email === newApproval.email);
+    if (existingIndex > -1) {
+      currentPending[existingIndex] = {
+        ...currentPending[existingIndex],
+        ...newApproval,
+        id: currentPending[existingIndex].id
+      };
+      localStorage.setItem('spacelo_pending_approvals', JSON.stringify(currentPending));
+    } else {
       localStorage.setItem('spacelo_pending_approvals', JSON.stringify([...currentPending, newApproval]));
     }
 
