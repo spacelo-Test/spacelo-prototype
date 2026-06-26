@@ -20,6 +20,16 @@ export default function HomeTab() {
   // Spend calculation (mocked)
   const totalSpend = activeBookings.reduce((sum, r) => sum + r.offeredPrice, 0) + 120000; // base mock spend
 
+  // ── KPI config — rendered inside one unified card ──────────────────────────
+  const kpis = [
+    { label: 'Active Bookings', value: activeBookings.length, icon: 'event_available', valueClass: 'text-[#005344]' },
+    { label: 'Pending Requests', value: pendingRequests.length, icon: 'inbox', valueClass: 'text-[#fe6a34]', accent: true },
+    { label: 'Spend (Month)', value: `PKR ${totalSpend.toLocaleString()}`, icon: 'payments', valueClass: 'text-[#005344]' },
+    { label: 'Booked (Month)', value: `${activeBookings.length + 1} spaces`, icon: 'storefront', valueClass: 'text-[#005344]' },
+    { label: 'Pending Proofs', value: pendingProofs.length, icon: 'photo_camera', valueClass: 'text-[#ab3500]' },
+    { label: 'Open Disputes', value: openDisputes.length, icon: 'report_problem', valueClass: 'text-red-600' },
+  ];
+
   const handleDismissBanner = () => {
     setBannerDismissed(true);
   };
@@ -72,33 +82,23 @@ export default function HomeTab() {
         </div>
       )}
 
-      {/* KPI Cards Horizontal Scroll */}
+      {/* KPI Overview — single unified card */}
       <section className="space-y-2">
         <h3 className="text-[11px] font-black uppercase text-[#6e7975] tracking-wider px-1">Campaign Overview</h3>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
-          <div className="snap-start min-w-[130px] bg-white border border-[#e0e3e0] rounded-xl p-3 shadow-sm flex flex-col justify-between h-[80px]">
-            <span className="text-[10px] font-bold text-[#6e7975] uppercase">Active Bookings</span>
-            <span className="text-[20px] font-black text-[#005344]">{activeBookings.length}</span>
-          </div>
-          <div className="snap-start min-w-[130px] bg-white border border-[#e0e3e0] rounded-xl p-3 shadow-sm flex flex-col justify-between h-[80px] border-l-4 border-l-[#fe6a34]">
-            <span className="text-[10px] font-bold text-[#6e7975] uppercase">Pending Requests</span>
-            <span className="text-[20px] font-black text-[#fe6a34]">{pendingRequests.length}</span>
-          </div>
-          <div className="snap-start min-w-[140px] bg-white border border-[#e0e3e0] rounded-xl p-3 shadow-sm flex flex-col justify-between h-[80px]">
-            <span className="text-[10px] font-bold text-[#6e7975] uppercase">Spend (This Month)</span>
-            <span className="text-[18px] font-black text-[#005344]">PKR {totalSpend.toLocaleString()}</span>
-          </div>
-          <div className="snap-start min-w-[130px] bg-white border border-[#e0e3e0] rounded-xl p-3 shadow-sm flex flex-col justify-between h-[80px]">
-            <span className="text-[10px] font-bold text-[#6e7975] uppercase">Booked (Month)</span>
-            <span className="text-[20px] font-black text-[#005344]">{activeBookings.length + 1} spaces</span>
-          </div>
-          <div className="snap-start min-w-[140px] bg-white border border-[#e0e3e0] rounded-xl p-3 shadow-sm flex flex-col justify-between h-[80px]">
-            <span className="text-[10px] font-bold text-[#6e7975] uppercase">Pending Proofs</span>
-            <span className="text-[20px] font-black text-[#ab3500]">{pendingProofs.length}</span>
-          </div>
-          <div className="snap-start min-w-[130px] bg-white border border-[#e0e3e0] rounded-xl p-3 shadow-sm flex flex-col justify-between h-[80px]">
-            <span className="text-[10px] font-bold text-[#6e7975] uppercase">Open Disputes</span>
-            <span className="text-[20px] font-black text-red-600">{openDisputes.length}</span>
+        <div className="bg-white border border-[#e0e3e0] rounded-2xl shadow-[0_2px_14px_rgba(0,0,0,0.05)] overflow-hidden">
+          <div className="grid grid-cols-3">
+            {kpis.map((k, i) => (
+              <div
+                key={i}
+                className={`bg-white px-3 py-3.5 flex flex-col gap-1 transition-colors hover:bg-[#fafbfa]${
+                  i >= 3 ? ' border-t border-[#eef1ef]' : ''
+                }`}
+              >
+                <span className={`material-symbols-outlined text-[18px] ${k.valueClass}`}>{k.icon}</span>
+                <span className={`text-[15px] font-black leading-tight ${k.valueClass} mt-0.5 truncate`}>{k.value}</span>
+                <span className="text-[8px] font-bold text-[#6e7975] uppercase tracking-wider leading-tight">{k.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>

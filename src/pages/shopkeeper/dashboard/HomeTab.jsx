@@ -159,30 +159,37 @@ export default function HomeTab() {
           {isMallOwner ? `${chainName} — ${branchArea}` : "Super Store"}
         </h1>
       </div>
-      {/* ── KPI Grid Block ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-2.5">
-        {kpiCards.map((card, i) => (
-          <div
-            key={i}
-            className={`bg-white border border-[#e0e3e0] rounded-xl p-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.03)] flex flex-col gap-1 transition-all hover:scale-[1.01]${
-              card.accentBorder ? " border-l-2 border-l-[#fe6a34] pl-2" : ""
-            }`}
-          >
-            <span
-              className={`material-symbols-outlined text-[18px] ${card.iconClass}`}
+      {/* ── KPI Overview — single unified card ─────────────────────────────── */}
+      <div className="bg-white border border-[#e0e3e0] rounded-2xl shadow-[0_2px_14px_rgba(0,0,0,0.05)] overflow-hidden">
+        <div className="px-4 pt-3.5 pb-2.5">
+          <h2 className="text-[11px] font-black uppercase tracking-widest text-[#6e7975]">
+            Overview
+          </h2>
+        </div>
+        <div className="grid grid-cols-3 border-t border-[#eef1ef]">
+          {kpiCards.map((card, i) => (
+            <div
+              key={i}
+              className={`bg-white px-3 py-3 flex flex-col gap-1 transition-colors hover:bg-[#fafbfa]${
+                i >= 3 ? " border-t border-[#eef1ef]" : ""
+              }`}
             >
-              {card.icon}
-            </span>
-            <p
-              className={`text-[12px] font-black leading-tight ${card.valueClass} mt-0.5 truncate`}
-            >
-              {card.value}
-            </p>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-[#6e7975] leading-tight mt-0.5">
-              {card.label}
-            </p>
-          </div>
-        ))}
+              <span
+                className={`material-symbols-outlined text-[19px] ${card.iconClass}`}
+              >
+                {card.icon}
+              </span>
+              <p
+                className={`text-[13px] font-black leading-tight ${card.valueClass} mt-0.5 truncate`}
+              >
+                {card.value}
+              </p>
+              <p className="text-[8px] font-bold uppercase tracking-wider text-[#6e7975] leading-tight">
+                {card.label}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
       {/* ── Action-Needed Strip ─────────────────────────────────────────────── */}
       {actions.length > 0 && (
