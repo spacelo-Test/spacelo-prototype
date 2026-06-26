@@ -4,13 +4,25 @@ import { ShopkeeperProvider } from './shopkeeper/dashboard/ShopkeeperContext';
 import DashboardShell from './shopkeeper/dashboard/DashboardShell';
 import { CompanyProvider } from './company/dashboard/CompanyContext';
 import CompanyDashboardShell from './company/dashboard/CompanyDashboardShell';
+import ShopkeeperVerification from './shopkeeper/ShopkeeperVerification';
+import CompanyVerification from './company/CompanyVerification';
 import { STORAGE_KEYS } from '../lib/constants';
+
+// localStorage key that records each role's verification-form submission
+const VERIFICATION_KEYS = {
+  'Mall Owner': 'mallVerificationSubmitted',
+  'Company/Brand': 'companyVerificationSubmitted',
+  Shopkeeper: 'shopkeeperVerificationSubmitted',
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const role = localStorage.getItem(STORAGE_KEYS.USER_ROLE) || 'Shopkeeper';
+  const verificationKey = VERIFICATION_KEYS[role] || VERIFICATION_KEYS.Shopkeeper;
+
   const [isApproved, setIsApproved] = useState(false);
   const [verificationSubmitted, setVerificationSubmitted] = useState(
-    localStorage.getItem('mallVerificationSubmitted') === 'true'
+    localStorage.getItem(verificationKey) === 'true'
   );
 
   const [ntn, setNtn] = useState('');
@@ -22,8 +34,9 @@ export default function Dashboard() {
   const [affDoc, setAffDoc] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const userRole = localStorage.getItem(STORAGE_KEYS.USER_ROLE) || 'Shopkeeper';
-  const isMallOwner = userRole === 'Mall Owner';
+  const userRole = role;
+  const isMallOwner = role === 'Mall Owner';
+  const isCompany = role === 'Company/Brand';
   const chainName = localStorage.getItem(STORAGE_KEYS.CHAIN_NAME) || 'Imtiaz Supermarket';
 
   const handleLogout = () => {
@@ -32,8 +45,14 @@ export default function Dashboard() {
     localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
     localStorage.removeItem(STORAGE_KEYS.CHAIN_NAME);
     localStorage.removeItem(STORAGE_KEYS.BRANCH_AREA);
-    localStorage.removeItem('mallVerificationSubmitted');
+    Object.values(VERIFICATION_KEYS).forEach((k) => localStorage.removeItem(k));
     navigate('/login');
+  };
+
+  // Called by the Shopkeeper / Company verification form components on submit
+  const markVerificationSubmitted = () => {
+    localStorage.setItem(verificationKey, 'true');
+    setVerificationSubmitted(true);
   };
 
   const handleUploadSecp = () => {
@@ -54,14 +73,16 @@ export default function Dashboard() {
       setErrorMsg('Please upload Chain Affiliation Document');
       return;
     }
-    localStorage.setItem('mallVerificationSubmitted', 'true');
+    localStorage.setItem(verificationKey, 'true');
     setVerificationSubmitted(true);
     setErrorMsg('');
   };
 
   // Render OTP verification pending state
   if (!isApproved) {
-    const showForm = isMallOwner && !verificationSubmitted;
+    const showMallForm = isMallOwner && !verificationSubmitted;
+    const showCompanyForm = isCompany && !verificationSubmitted;
+    const showShopkeeperForm = !isMallOwner && !isCompany && !verificationSubmitted;
 
     return (
       <div className="bg-background text-on-background min-h-full flex flex-col font-manrope overflow-y-auto">
@@ -80,7 +101,15 @@ export default function Dashboard() {
 
         {/* Pending Card or Form */}
         <main className="flex-grow p-4 pb-12">
-          {showForm ? (
+          {showShopkeeperForm ? (
+            <div className="mt-2">
+              <ShopkeeperVerification onSubmitted={markVerificationSubmitted} />
+            </div>
+          ) : showCompanyForm ? (
+            <div className="mt-2">
+              <CompanyVerification onSubmitted={markVerificationSubmitted} />
+            </div>
+          ) : showMallForm ? (
             <div className="w-full bg-white p-5 rounded-2xl border border-[#ebefec] shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-5 max-w-md mx-auto">
               <div className="border-b border-[#ebefec] pb-3 text-center">
                 <div className="w-14 h-14 bg-[#fe6a34]/10 text-[#fe6a34] rounded-full flex items-center justify-center mb-3 mx-auto">
@@ -232,9 +261,9 @@ export default function Dashboard() {
                 )}
               </div>
               <h2 className="text-[20px] font-extrabold text-[#181c1b] mb-3">
-                {isMallOwner ? 'Verification Pending' : 'Application Pending'}
+                Verification Pending
               </h2>
-              
+
               <div className="bg-[#f7faf7] border border-[#e0e3e0] rounded-xl p-4 mb-8 max-w-sm text-left flex gap-3 items-start">
                 {isMallOwner ? (
                   <>
@@ -247,14 +276,14 @@ export default function Dashboard() {
                   </>
                 ) : (
                   <p className="text-[14px] text-[#3e4945] font-semibold leading-relaxed text-center w-full">
-                    Your Application Is Pending Admin Approval. Once Approved You Will Enjoy Services and also receive Email On Approval.
+                    Your documents have been submitted and are pending admin approval. You'll receive an email once your account is verified — usually within 1–2 business days.
                   </p>
                 )}
               </div>
 
-              <button 
+              <button
                 onClick={() => {
-                  localStorage.setItem('mallVerificationSubmitted', 'true');
+                  localStorage.setItem(verificationKey, 'true');
                   setIsApproved(true);
                 }}
                 className="w-full bg-[#fe6a34] hover:bg-[#e05620] text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-[14px]"
