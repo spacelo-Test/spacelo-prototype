@@ -287,6 +287,26 @@ export default function ListingsTab() {
                         <span className="text-[15px] font-black text-[#005344]">PKR {listing.totalPrice.toLocaleString()}</span>
                         <span className="text-[10px] text-[#6e7975] ml-1">/total</span>
                       </div>
+
+                      {listing.status === 'Pending Approval' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setListings(prev => prev.map(l => l.id === listing.id ? { ...l, status: 'Live', verified: true } : l));
+                            pushNotification(
+                              'admin',
+                              'Listing Approved',
+                              `Commercial listing for "${nickname}" is now Live.`,
+                              { tab: 'listings', view: 'listing-detail', id: listing.id }
+                            );
+                          }}
+                          className="bg-[#00875a] hover:bg-[#005c3d] text-white px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1 transition-all z-10"
+                        >
+                          <span className="material-symbols-outlined text-[12px] font-bold">check_circle</span>
+                          Approve
+                        </button>
+                      )}
+
                       <span className="text-[11px] text-[#6e7975]">
                         {listing.bookingsCount} booking{listing.bookingsCount !== 1 ? 's' : ''}
                       </span>
@@ -296,17 +316,69 @@ export default function ListingsTab() {
               );
             })
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <span className="material-symbols-outlined text-[#6e7975] text-[64px]">sell</span>
-              <p className="text-[#181c1b] font-bold mt-2">No listings match your filter</p>
-              <p className="text-[#6e7975] text-[13px] mt-1 max-w-[240px]">Create an active listing so brands can book your available spaces.</p>
-              <button
-                onClick={() => { resetListingForm(); setCurrentView('create-listing'); }}
-                className="mt-4 bg-[#005344] text-white px-5 py-2 rounded-xl text-[14px] font-bold shadow-md hover:bg-[#003d32] transition-all"
-              >
-                Create Listing
-              </button>
-            </div>
+            (() => {
+              const emptyState = (() => {
+                switch (activeFilter) {
+                  case 'Inactive':
+                    return {
+                      icon: 'block',
+                      title: 'No Inactive Listings',
+                      desc: 'This is the inactive listings list. Inactive or deactivated listings will appear here.',
+                      showBtn: false,
+                    };
+                  case 'Expired':
+                    return {
+                      icon: 'history',
+                      title: 'No Expired Listings',
+                      desc: 'This is the expired listings list. Listings whose duration has expired will appear here.',
+                      showBtn: false,
+                    };
+                  case 'Live':
+                    return {
+                      icon: 'sell',
+                      title: 'No Live Listings',
+                      desc: 'This is the live listings list. Active listings currently live on the marketplace will appear here.',
+                      showBtn: true,
+                    };
+                  case 'Pending Approval':
+                    return {
+                      icon: 'pending_actions',
+                      title: 'No Pending Listings',
+                      desc: 'This is the pending listings list. Listings waiting for admin approval will appear here.',
+                      showBtn: false,
+                    };
+                  default:
+                    return {
+                      icon: 'sell',
+                      title: 'No listings match your filter',
+                      desc: 'Create an active listing so brands can book your available spaces.',
+                      showBtn: true,
+                    };
+                }
+              })();
+
+              return (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <span className="material-symbols-outlined text-[#6e7975] text-[64px]">
+                    {emptyState.icon}
+                  </span>
+                  <p className="text-[#181c1b] font-bold mt-2">
+                    {emptyState.title}
+                  </p>
+                  <p className="text-[#6e7975] text-[13px] mt-1 max-w-[240px]">
+                    {emptyState.desc}
+                  </p>
+                  {emptyState.showBtn && (
+                    <button
+                      onClick={() => { resetListingForm(); setCurrentView('create-listing'); }}
+                      className="mt-4 bg-[#005344] text-white px-5 py-2 rounded-xl text-[14px] font-bold shadow-md hover:bg-[#003d32] transition-all"
+                    >
+                      Create Listing
+                    </button>
+                  )}
+                </div>
+              );
+            })()
           )}
         </div>
 
@@ -452,7 +524,7 @@ export default function ListingsTab() {
                             <span className="text-[13px] font-bold text-[#181c1b] truncate">{space.nickname}</span>
                           </div>
                           <span className="text-[11px] text-[#6e7975] block mt-0.5">
-                            Floor {space.floor} • Aisle {space.aisle || 'N/A'} • {space.dimensions.l}x{space.dimensions.w}cm
+                            Floor {space.floor} • {space.dimensions.l}x{space.dimensions.w} in
                           </span>
                         </div>
                         {isSelected && (
@@ -604,7 +676,7 @@ export default function ListingsTab() {
                         {getSpaceTypeLabel(selectedSpace?.type)}
                       </span>
                       <h4 className="text-[13px] font-bold text-[#181c1b] mt-0.5">{selectedSpace?.nickname}</h4>
-                      <p className="text-[11px] text-[#6e7975] mt-0.5">Floor {selectedSpace?.floor} • Aisle {selectedSpace?.aisle || 'N/A'} • {selectedSpace?.section}</p>
+                      <p className="text-[11px] text-[#6e7975] mt-0.5">Floor {selectedSpace?.floor}</p>
                     </div>
                   </div>
                 </div>
@@ -803,7 +875,7 @@ export default function ListingsTab() {
               </div>
               <div className="col-span-2">
                 <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Location inside Shop</span>
-                <span className="font-bold text-[#181c1b]">Floor {space?.floor} • Aisle {space?.aisle || 'N/A'} • {space?.section}</span>
+                <span className="font-bold text-[#181c1b]">Floor {space?.floor}</span>
               </div>
             </div>
           </div>
@@ -914,6 +986,24 @@ export default function ListingsTab() {
 
           {/* Actions */}
           <div className="space-y-3 pt-2">
+            {listing.status === 'Pending Approval' && (
+              <button
+                onClick={() => {
+                  setListings(prev => prev.map(l => l.id === listing.id ? { ...l, status: 'Live', verified: true } : l));
+                  pushNotification(
+                    'admin',
+                    'Listing Approved',
+                    `Commercial listing for "${space?.nickname}" is now Live.`,
+                    { tab: 'listings', view: 'listing-detail', id: listing.id }
+                  );
+                }}
+                className="w-full py-3 bg-[#00875a] text-white rounded-xl text-[13px] font-black hover:bg-[#005c3d] transition-all text-center flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">verified</span>
+                Simulate Admin Approval
+              </button>
+            )}
+
             <button
               onClick={() => {
                 resetListingForm();

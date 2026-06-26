@@ -6,13 +6,13 @@ import DisputeTimer from './DisputeTimer';
 function DisputeDetail({ disputeId, onBack }) {
   const { disputes, setDisputes, navigateToView } = useShopkeeper();
   const [hasReUploaded, setHasReUploaded] = useState(false);
-  const dispute = disputes.find(d => d.id === disputeId);
+  const dispute = disputes.find(d => Number(d.id) === Number(disputeId));
 
   if (!dispute) return <div className="p-4 text-xs text-[#6e7975]">Dispute not found.</div>;
 
   const markResolved = () => {
     setDisputes(prev =>
-      prev.map(d => d.id === disputeId ? { ...d, status: 'Resolved', timeline: [...d.timeline, { event: 'Dispute resolved by shopkeeper', time: 'Just now', by: 'shopkeeper' }] } : d)
+      prev.map(d => Number(d.id) === Number(disputeId) ? { ...d, status: 'Resolved', timeline: [...d.timeline, { event: 'Dispute resolved by shopkeeper', time: 'Just now', by: 'shopkeeper' }] } : d)
     );
     onBack();
   };

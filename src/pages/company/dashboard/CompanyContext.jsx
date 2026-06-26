@@ -15,14 +15,12 @@ export function CompanyProvider({ children }) {
   const [spaces, setSpaces] = useState([
     {
       id: 1,
-      nickname: "End-Cap — Aisle 3 (Beverages)",
+      nickname: "End-Cap — Ground Floor",
       shop: "Imtiaz Supermarket",
       branch: "Johar Town Branch",
       type: "end_cap",
       floor: "Ground",
-      aisle: "3",
-      section: "Beverages",
-      dimensions: { l: 90, w: 45, h: 160, unit: "cm" },
+      dimensions: { l: 36, w: 18, h: 64, unit: "inches" },
       footfall: "High (200+)",
       price: 45000,
       rating: 4.9,
@@ -33,14 +31,12 @@ export function CompanyProvider({ children }) {
     },
     {
       id: 2,
-      nickname: "Checkout Counter A",
+      nickname: "Checkout Counter Stand",
       shop: "Naheed Supermarket",
       branch: "Bahadurabad Branch",
       type: "checkout_counter",
       floor: "Ground",
-      aisle: "Checkout Area",
-      section: "FMCG/Snacks",
-      dimensions: { l: 60, w: 30, h: 80, unit: "cm" },
+      dimensions: { l: 24, w: 12, h: 32, unit: "inches" },
       footfall: "High (200+)",
       price: 35000,
       rating: 4.8,
@@ -56,9 +52,7 @@ export function CompanyProvider({ children }) {
       branch: "Gulberg Branch",
       type: "window_display",
       floor: "Ground",
-      aisle: "Entrance",
-      section: "Fashion/Cosmetics",
-      dimensions: { l: 180, w: 60, h: 200, unit: "cm" },
+      dimensions: { l: 72, w: 24, h: 80, unit: "inches" },
       footfall: "High (200+)",
       price: 60000,
       rating: 4.7,
@@ -69,14 +63,12 @@ export function CompanyProvider({ children }) {
     },
     {
       id: 4,
-      nickname: "Main Entrance Promotional Stand",
+      nickname: "Main Entrance Promo Stand",
       shop: "Metro Cash & Carry",
       branch: "Thokar Niaz Baig Branch",
       type: "entrance_display",
       floor: "Ground",
-      aisle: "Main Entrance",
-      section: "Promo",
-      dimensions: { l: 150, w: 150, h: 220, unit: "cm" },
+      dimensions: { l: 60, w: 60, h: 88, unit: "inches" },
       footfall: "High (200+)",
       price: 50000,
       rating: 4.8,
@@ -92,9 +84,7 @@ export function CompanyProvider({ children }) {
       branch: "DHA Phase 5 Branch",
       type: "shelf",
       floor: "Ground",
-      aisle: "5",
-      section: "Snacks",
-      dimensions: { l: 100, w: 30, h: 150, unit: "cm" },
+      dimensions: { l: 40, w: 12, h: 60, unit: "inches" },
       footfall: "Medium (50–200)",
       price: 20000,
       rating: 4.5,
@@ -105,14 +95,12 @@ export function CompanyProvider({ children }) {
     },
     {
       id: 6,
-      nickname: "Bulk Promotional Aisle A",
+      nickname: "Bulk Promo Aisle A",
       shop: "Imtiaz Supermarket",
       branch: "Gulberg Branch",
       type: "promotional_aisle",
       floor: "Ground",
-      aisle: "Promo Aisle",
-      section: "FMCG",
-      dimensions: { l: 300, w: 100, h: 200, unit: "cm" },
+      dimensions: { l: 120, w: 40, h: 80, unit: "inches" },
       footfall: "High (200+)",
       price: 90000,
       rating: 4.9,
@@ -123,14 +111,12 @@ export function CompanyProvider({ children }) {
     },
     {
       id: 7,
-      nickname: "End-Cap — Aisle 2 (Snacks)",
+      nickname: "End-Cap — Snacks",
       shop: "Imtiaz Supermarket",
       branch: "DHA Phase 6 Branch",
       type: "end_cap",
       floor: "Ground",
-      aisle: "2",
-      section: "Snacks",
-      dimensions: { l: 90, w: 45, h: 160, unit: "cm" },
+      dimensions: { l: 36, w: 18, h: 64, unit: "inches" },
       footfall: "High (200+)",
       price: 42000,
       rating: 4.9,
@@ -142,86 +128,273 @@ export function CompanyProvider({ children }) {
   ]);
 
   // 2. Outgoing Requests State
-  const [requests, setRequests] = useState([
-    {
-      id: 101,
-      spaceId: 1,
-      brand: "Nestlé",
-      productName: "MILO Drinks",
-      startDate: "2026-06-01",
-      endDate: "2026-08-31",
-      durationLabel: "3 months (Jun 1 – Aug 31, 2026)",
-      offeredPrice: 120000,
-      pricePerMonth: 40000,
-      status: "Countered",
-      time: "1 hour ago",
-      contractSignedByBrand: false,
-      contractSignedByShopkeeper: false,
-      proofs: [],
-      timelineStep: 1,
-      counterHistory: [
-        { by: "company", date: "June 20, 2026", price: 120000, note: "Initial test offer." },
-        { by: "shopkeeper", date: "June 21, 2026", price: 135000, note: "This beverages aisle has high footfall. Final price is PKR 135,000." }
-      ]
-    },
-    {
-      id: 102,
-      spaceId: 2,
-      brand: "Nestlé",
-      productName: "KitKat Chocolates",
-      startDate: "2026-07-01",
-      endDate: "2026-12-31",
-      durationLabel: "6 months (Jul 1 – Dec 31, 2026)",
-      offeredPrice: 210000,
-      pricePerMonth: 35000,
-      status: "Accepted",
-      time: "4 hours ago",
-      contractSignedByBrand: false,
-      contractSignedByShopkeeper: true,
-      proofs: [],
-      timelineStep: 2,
-      counterHistory: []
-    },
-    {
-      id: 103,
-      spaceId: 3,
-      brand: "Nestlé",
-      productName: "Nescafé Coffee",
-      startDate: "2026-06-01",
-      endDate: "2026-06-30",
-      durationLabel: "1 month (Jun 1 – Jun 30, 2026)",
-      offeredPrice: 60000,
-      pricePerMonth: 60000,
-      status: "Active",
-      time: "Yesterday",
-      contractSignedByBrand: true,
-      contractSignedByShopkeeper: true,
-      proofs: ["https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=400&q=80"],
-      timelineStep: 6, // Product Placed / Active
-      counterHistory: [],
-      monthlyBreakdown: [
-        { month: "June 2026", gross: 60000, commission: 9000, net: 51000, status: "Released" }
-      ]
-    },
-    {
-      id: 104,
-      spaceId: 4,
-      brand: "Nestlé",
-      productName: "Everyday Milk Powder",
-      startDate: "2026-06-15",
-      endDate: "2026-08-15",
-      durationLabel: "2 months (Jun 15 – Aug 15, 2026)",
-      offeredPrice: 100000,
-      pricePerMonth: 50000,
-      status: "Pending",
-      time: "2 days ago",
-      contractSignedByBrand: false,
-      contractSignedByShopkeeper: false,
-      proofs: [],
-      timelineStep: 0,
-      counterHistory: []
+  const [requests, setRequests] = useState(() => {
+    const saved = localStorage.getItem('spacelo_requests');
+    let list = [];
+    if (saved) {
+      try {
+        list = JSON.parse(saved);
+      } catch (e) {}
     }
-  ]);
+    const defaults = [
+      {
+        id: 1,
+        brand: "Unilever Pakistan",
+        logo: "U",
+        logoBg: "bg-blue-600",
+        trustScore: 4.9,
+        verified: true,
+        listingId: 1,
+        spaceId: 1,
+        requestedDates: "Jan 1 – Mar 31, 2025",
+        durationMonths: 3,
+        offeredPrice: 135000,
+        pricePerMonth: 45000,
+        productName: "Sunsilk Shampoo 200ml Range",
+        status: "Pending",
+        type: "regular",
+        time: "2 hours ago",
+        contractSignedByBrand: false,
+        contractSignedByShopkeeper: false,
+        proofs: [],
+        timelineStep: 0,
+        counterHistory: [],
+        monthlyBreakdown: [
+          { month: "January 2025", gross: 45000, commission: 6750, net: 38250, status: "In Escrow" },
+          { month: "February 2025", gross: 45000, commission: 6750, net: 38250, status: "In Escrow" },
+          { month: "March 2025", gross: 45000, commission: 6750, net: 38250, status: "In Escrow" }
+        ]
+      },
+      {
+        id: 2,
+        brand: "Nestle Pakistan",
+        logo: "N",
+        logoBg: "bg-red-600",
+        trustScore: 4.7,
+        verified: true,
+        listingId: 3,
+        spaceId: 4,
+        requestedDates: "Jan 15 – Feb 14, 2025",
+        durationMonths: 1,
+        offeredPrice: 25000,
+        pricePerMonth: 25000,
+        productName: "Milo 3-in-1 Sachets Display Stand",
+        status: "Accepted",
+        type: "regular",
+        time: "Yesterday",
+        contractSignedByBrand: true,
+        contractSignedByShopkeeper: false,
+        proofs: [],
+        timelineStep: 2,
+        counterHistory: [],
+        monthlyBreakdown: [
+          { month: "January 2025", gross: 25000, commission: 3750, net: 21250, status: "In Escrow" }
+        ]
+      },
+      {
+        id: 3,
+        brand: "Tapal Tea",
+        logo: "T",
+        logoBg: "bg-green-700",
+        trustScore: 4.6,
+        verified: true,
+        listingId: 1,
+        spaceId: 1,
+        requestedDates: "Oct 1 – Dec 31, 2024",
+        durationMonths: 3,
+        offeredPrice: 135000,
+        pricePerMonth: 45000,
+        productName: "Tapal Danedar Family Pack — Full Shelf Display",
+        status: "Completed",
+        type: "regular",
+        time: "5 days ago",
+        contractSignedByBrand: true,
+        contractSignedByShopkeeper: true,
+        proofs: [
+          "https://images.unsplash.com/photo-1506617424151-74f5609c1fa6?auto=format&fit=crop&w=400&q=80"
+        ],
+        timelineStep: 7,
+        counterHistory: [],
+        monthlyBreakdown: [
+          { month: "October 2024", gross: 45000, commission: 6750, net: 38250, status: "Released" },
+          { month: "November 2024", gross: 45000, commission: 6750, net: 38250, status: "Released" },
+          { month: "December 2024", gross: 45000, commission: 6750, net: 38250, status: "Released" }
+        ]
+      },
+      {
+        id: 101,
+        brand: "Nestlé",
+        logo: "N",
+        logoBg: "bg-red-600",
+        trustScore: 4.7,
+        verified: true,
+        listingId: 1,
+        spaceId: 1,
+        requestedDates: "2026-06-01 – 2026-08-31",
+        durationMonths: 3,
+        durationLabel: "3 months (Jun 1 – Aug 31, 2026)",
+        offeredPrice: 120000,
+        pricePerMonth: 40000,
+        status: "Countered",
+        type: "regular",
+        time: "1 hour ago",
+        contractSignedByBrand: false,
+        contractSignedByShopkeeper: false,
+        proofs: [],
+        timelineStep: 1,
+        counterHistory: [
+          { by: "company", date: "June 20, 2026", price: 120000, note: "Initial test offer." },
+          { by: "shopkeeper", date: "June 21, 2026", price: 135000, note: "This beverages aisle has high footfall. Final price is PKR 135,000." }
+        ]
+      },
+      {
+        id: 102,
+        brand: "Nestlé",
+        logo: "N",
+        logoBg: "bg-red-600",
+        trustScore: 4.7,
+        verified: true,
+        listingId: 3,
+        spaceId: 4,
+        requestedDates: "2026-07-01 – 2026-12-31",
+        durationMonths: 6,
+        durationLabel: "6 months (Jul 1 – Dec 31, 2026)",
+        offeredPrice: 210000,
+        pricePerMonth: 35000,
+        status: "Accepted",
+        type: "regular",
+        time: "4 hours ago",
+        contractSignedByBrand: false,
+        contractSignedByShopkeeper: true,
+        proofs: [],
+        timelineStep: 2,
+        counterHistory: []
+      },
+      {
+        id: 103,
+        brand: "Nestlé",
+        logo: "N",
+        logoBg: "bg-red-600",
+        trustScore: 4.7,
+        verified: true,
+        listingId: 2,
+        spaceId: 2,
+        requestedDates: "2026-06-01 – 2026-06-30",
+        durationMonths: 1,
+        durationLabel: "1 month (Jun 1 – Jun 30, 2026)",
+        offeredPrice: 60000,
+        pricePerMonth: 60000,
+        status: "Active",
+        type: "regular",
+        time: "Yesterday",
+        contractSignedByBrand: true,
+        contractSignedByShopkeeper: true,
+        proofs: ["https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=400&q=80"],
+        timelineStep: 6,
+        counterHistory: [],
+        monthlyBreakdown: [
+          { month: "June 2026", gross: 60000, commission: 9000, net: 51000, status: "Released" }
+        ]
+      },
+      {
+        id: 104,
+        brand: "Nestlé",
+        logo: "N",
+        logoBg: "bg-red-600",
+        trustScore: 4.7,
+        verified: true,
+        listingId: 3,
+        spaceId: 4,
+        requestedDates: "2026-06-15 – 2026-08-15",
+        durationMonths: 2,
+        durationLabel: "2 months (Jun 15 – Aug 15, 2026)",
+        offeredPrice: 100000,
+        pricePerMonth: 50000,
+        status: "Pending",
+        type: "regular",
+        time: "2 days ago",
+        contractSignedByBrand: false,
+        contractSignedByShopkeeper: false,
+        proofs: [],
+        timelineStep: 0,
+        counterHistory: []
+      },
+      {
+        id: 201,
+        brand: "P&G Pakistan",
+        logo: "P",
+        logoBg: "bg-purple-600",
+        trustScore: 4.8,
+        verified: true,
+        listingId: 1,
+        spaceId: 1,
+        requestedDates: "Apr 1 – Jun 30, 2025",
+        durationMonths: 3,
+        offeredPrice: 135000,
+        pricePerMonth: 45000,
+        productName: "Head & Shoulders Anti-Dandruff Range",
+        status: "Pending",
+        type: "advance",
+        isAdvance: true,
+        time: "3 days ago",
+        advanceNote: "Booking in advance — our current campaign runs until March 2025. Want to secure this shelf for Q2.",
+        contractSignedByBrand: false,
+        contractSignedByShopkeeper: false,
+        proofs: [],
+        timelineStep: 0,
+        counterHistory: [],
+        monthlyBreakdown: [
+          { month: "April 2025", gross: 45000, commission: 6750, net: 38250, status: "In Escrow" },
+          { month: "May 2025", gross: 45000, commission: 6750, net: 38250, status: "In Escrow" },
+          { month: "June 2025", gross: 45000, commission: 6750, net: 38250, status: "In Escrow" }
+        ]
+      },
+      {
+        id: 202,
+        brand: "Reckitt Pakistan",
+        logo: "R",
+        logoBg: "bg-orange-600",
+        trustScore: 4.5,
+        verified: true,
+        listingId: 3,
+        spaceId: 4,
+        requestedDates: "Mar 1 – Mar 31, 2025",
+        durationMonths: 1,
+        offeredPrice: 25000,
+        pricePerMonth: 25000,
+        productName: "Dettol Hand Wash — Checkout Display",
+        status: "Countered",
+        type: "advance",
+        isAdvance: true,
+        time: "1 week ago",
+        advanceNote: "Flexible on dates — can shift by up to 2 weeks if needed for scheduling.",
+        contractSignedByBrand: false,
+        contractSignedByShopkeeper: false,
+        proofs: [],
+        timelineStep: 0,
+        counterHistory: [
+          {
+            by: "shopkeeper",
+            date: "Jan 10, 2025",
+            newDates: "Mar 15 – Apr 14, 2025",
+            newPrice: 26000,
+            note: "Slight date shift needed for handover from current booking. Price adjusted slightly."
+          }
+        ],
+        monthlyBreakdown: [
+          { month: "March 2025", gross: 25000, commission: 3750, net: 21250, status: "In Escrow" }
+        ]
+      }
+    ];
+
+    defaults.forEach(d => {
+      if (!list.some(r => Number(r.id) === Number(d.id))) {
+        list.push(d);
+      }
+    });
+
+    return list;
+  });
 
   // 3. Campaigns (Bulk requests)
   const [campaigns, setCampaigns] = useState([
@@ -375,7 +548,7 @@ export function CompanyProvider({ children }) {
   const [recentlyViewed, setRecentlyViewed] = useState([
     {
       id: 1,
-      nickname: "End-Cap — Aisle 3 (Beverages)",
+      nickname: "End-Cap — Ground Floor (Beverages)",
       shop: "Imtiaz Supermarket",
       branch: "Johar Town Branch",
       type: "end_cap",
@@ -408,6 +581,108 @@ export function CompanyProvider({ children }) {
   const sendAdvanceRequest = (reqData) => {
     addRequest({ ...reqData, isAdvance: true });
   };
+
+  // Sync Outgoing Requests to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('spacelo_requests', JSON.stringify(requests));
+  }, [requests]);
+
+  // Sync dynamic spaces from shopkeeper listings in localStorage
+  React.useEffect(() => {
+    const savedSpaces = localStorage.getItem('spacelo_spaces');
+    const savedListings = localStorage.getItem('spacelo_listings');
+    if (savedSpaces && savedListings) {
+      const sSpaces = JSON.parse(savedSpaces);
+      const sListings = JSON.parse(savedListings);
+      
+      const liveListings = sListings.filter(l => l.status === 'Live');
+      setSpaces(prev => {
+        const base = prev.filter(s => s.id < 1000);
+        const dynamic = liveListings.map(listing => {
+          const space = sSpaces.find(s => s.id === listing.spaceId);
+          if (!space) return null;
+          
+          // Avoid duplication
+          const shopName = space.isMallOwner ? (space.chainName || 'Store Chain') : 'Super Store';
+          if (base.some(s => s.nickname === space.nickname && s.shop === shopName)) {
+            return null;
+          }
+
+          return {
+            id: listing.id + 1000,
+            originalListingId: listing.id,
+            nickname: space.nickname,
+            shop: shopName,
+            branch: space.branchArea || 'Johar Town Branch',
+            type: space.type,
+            floor: space.floor,
+            dimensions: space.dimensions,
+            footfall: space.footfall,
+            price: listing.pricePerMonth,
+            rating: 4.8,
+            city: 'Lahore',
+            area: 'Johar Town',
+            photos: space.photos && space.photos.length > 0 ? space.photos : ["https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80"],
+            desc: space.desc || listing.productPreference
+          };
+        }).filter(Boolean);
+        return [...base, ...dynamic];
+      });
+    }
+  }, []);
+
+  // Real-time synchronization across browser tabs
+  React.useEffect(() => {
+    const handleStorage = (e) => {
+      try {
+        if (e.key === 'spacelo_requests' && e.newValue) {
+          setRequests(JSON.parse(e.newValue));
+        }
+        if ((e.key === 'spacelo_listings' || e.key === 'spacelo_spaces') && e.newValue) {
+          const savedSpaces = localStorage.getItem('spacelo_spaces');
+          const savedListings = localStorage.getItem('spacelo_listings');
+          if (savedSpaces && savedListings) {
+            const sSpaces = JSON.parse(savedSpaces);
+            const sListings = JSON.parse(savedListings);
+            const liveListings = sListings.filter(l => l.status === 'Live');
+            setSpaces(prev => {
+              const base = prev.filter(s => s.id < 1000);
+              const dynamic = liveListings.map(listing => {
+                const space = sSpaces.find(s => s.id === listing.spaceId);
+                if (!space) return null;
+                const shopName = space.isMallOwner ? (space.chainName || 'Store Chain') : 'Super Store';
+                if (base.some(s => s.nickname === space.nickname && s.shop === shopName)) {
+                  return null;
+                }
+                return {
+                  id: listing.id + 1000,
+                  originalListingId: listing.id,
+                  nickname: space.nickname,
+                  shop: shopName,
+                  branch: space.branchArea || 'Johar Town Branch',
+                  type: space.type,
+                  floor: space.floor,
+                  dimensions: space.dimensions,
+                  footfall: space.footfall,
+                  price: listing.pricePerMonth,
+                  rating: 4.8,
+                  city: 'Lahore',
+                  area: 'Johar Town',
+                  photos: space.photos && space.photos.length > 0 ? space.photos : ["https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80"],
+                  desc: space.desc || listing.productPreference
+                };
+              }).filter(Boolean);
+              return [...base, ...dynamic];
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Storage sync error:", err);
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   return (
     <CompanyContext.Provider value={{

@@ -70,21 +70,6 @@ export default function DashboardShell({ handleLogout }) {
           </span>
 
           <div className="flex items-center gap-1.5">
-            {/* Dispute alert dot */}
-            {openDisputes > 0 && (
-              <button
-                onClick={() => navigateToView("disputes", "main")}
-                className="p-1.5 rounded-full bg-[#ba1a1a]/10 hover:bg-[#ba1a1a]/20 transition-colors relative"
-              >
-                <span
-                  className="material-symbols-outlined text-[20px] text-[#ba1a1a]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  report_problem
-                </span>
-                <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-[#ba1a1a] rounded-full" />
-              </button>
-            )}
 
             {/* Notification Bell */}
             <button

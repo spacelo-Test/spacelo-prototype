@@ -201,6 +201,7 @@ export default function BrowseTab() {
       startDate: requestForm.dateStart,
       endDate: requestForm.dateEnd,
       durationLabel: `${duration} month(s) (${requestForm.dateStart} to ${requestForm.dateEnd})`,
+      durationMonths: duration,
       offeredPrice: Number(requestForm.offerPrice),
       pricePerMonth: Math.round(Number(requestForm.offerPrice) / duration),
       status: 'Pending'
@@ -1073,13 +1074,9 @@ export default function BrowseTab() {
                 <p className="font-bold text-[#6e7975]">Daily Footfall</p>
                 <p className="font-black text-[#181c1b] mt-0.5">{selectedSpace.footfall}</p>
               </div>
-              <div>
+              <div className="col-span-2">
                 <p className="font-bold text-[#6e7975]">Floor Location</p>
-                <p className="font-black text-[#181c1b] mt-0.5">Floor {selectedSpace.floor} • Section {selectedSpace.section}</p>
-              </div>
-              <div>
-                <p className="font-bold text-[#6e7975]">Aisle Details</p>
-                <p className="font-black text-[#181c1b] mt-0.5">Aisle {selectedSpace.aisle}</p>
+                <p className="font-black text-[#181c1b] mt-0.5">Floor {selectedSpace.floor}</p>
               </div>
             </div>
 

@@ -2,6 +2,49 @@ import React, { useState } from 'react';
 import { useShopkeeper } from './ShopkeeperContext';
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
+function getDurationMonths(r) {
+  if (r.durationMonths) return r.durationMonths;
+  if (r.startDate && r.endDate) {
+    const dtStart = new Date(r.startDate);
+    const dtEnd = new Date(r.endDate);
+    if (!isNaN(dtStart) && !isNaN(dtEnd)) {
+      const months = (dtEnd.getFullYear() - dtStart.getFullYear()) * 12 + (dtEnd.getMonth() - dtStart.getMonth());
+      return Math.max(1, months);
+    }
+  }
+  return 1;
+}
+
+function generateMonthlyBreakdown(offeredPrice, durationMonths, startDate) {
+  const price = offeredPrice || 0;
+  const monthsCount = durationMonths || 1;
+  const pricePerMonth = Math.round(price / monthsCount);
+  const commissionPerMonth = Math.round(pricePerMonth * 0.15);
+  const netPerMonth = pricePerMonth - commissionPerMonth;
+  
+  let start = new Date();
+  if (startDate) {
+    const parsed = new Date(startDate);
+    if (!isNaN(parsed)) {
+      start = parsed;
+    }
+  }
+  
+  const list = [];
+  for (let i = 0; i < monthsCount; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+    const monthName = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    list.push({
+      month: monthName,
+      gross: pricePerMonth,
+      commission: commissionPerMonth,
+      net: netPerMonth,
+      status: "In Escrow"
+    });
+  }
+  return list;
+}
+
 function StatusBadge({ status }) {
   const map = {
     Pending:   'bg-[#ffab00]/10 text-[#7a4f00] border border-[#ffab00]/30',
@@ -148,12 +191,14 @@ function CalendarView({ onBack }) {
 
 /* ─── Proof Upload ──────────────────────────────────────────────────────────── */
 function ProofUploadView({ reqId, onBack }) {
-  const { requests, advanceRequests, setRequests, setAdvanceRequests, pushNotification } = useShopkeeper();
+  const { requests, advanceRequests, setRequests, setAdvanceRequests, pushNotification, disputes, setDisputes, navigateToView } = useShopkeeper();
   const [proofPhotos, setProofPhotos] = useState([]);
   const allReqs = [...requests, ...advanceRequests];
-  const req = allReqs.find(r => r.id === reqId);
+  const req = allReqs.find(r => Number(r.id) === Number(reqId));
   const isAdvance = req?.type === 'advance';
   const space = req?.spaceId;
+
+  const openDispute = disputes?.find(d => Number(d.requestId) === Number(reqId) && d.status === 'Open');
 
   const addPhoto = () => {
     if (proofPhotos.length >= 3) return;
@@ -162,13 +207,32 @@ function ProofUploadView({ reqId, onBack }) {
   };
 
   const submit = () => {
-    const updater = r => r.id === reqId
+    const updater = r => Number(r.id) === Number(reqId)
       ? { ...r, proofs: proofPhotos, timelineStep: 5 }
       : r;
     if (isAdvance) setAdvanceRequests(prev => prev.map(updater));
     else setRequests(prev => prev.map(updater));
-    pushNotification('payment', 'Proof Submitted', `Placement proof uploaded for ${req?.brand}.`, { tab: 'requests', view: 'booking-detail', id: reqId });
-    onBack();
+
+    if (openDispute) {
+      setDisputes(prev =>
+        prev.map(d => Number(d.id) === Number(openDispute.id)
+          ? {
+              ...d,
+              status: 'Resolved',
+              timeline: [
+                ...d.timeline,
+                { event: 'Dispute resolved (new proof uploaded)', time: 'Just now', by: 'shopkeeper' }
+              ]
+            }
+          : d
+        )
+      );
+      pushNotification('dispute', 'Dispute Resolved', `Dispute resolved for ${req?.brand} by uploading new proof.`, { tab: 'disputes', view: 'detail', id: openDispute.id });
+      navigateToView('disputes', 'main');
+    } else {
+      pushNotification('payment', 'Proof Submitted', `Placement proof uploaded for ${req?.brand}.`, { tab: 'requests', view: 'booking-detail', id: reqId });
+      onBack();
+    }
   };
 
   return (
@@ -246,7 +310,7 @@ function ProofUploadView({ reqId, onBack }) {
             : 'bg-[#e0e3e0] text-[#bec9c4] cursor-not-allowed'
         }`}
       >
-        Submit Proof ({proofPhotos.length} photo{proofPhotos.length !== 1 ? 's' : ''})
+        {openDispute ? 'Submit to Resolve Dispute' : `Submit Proof (${proofPhotos.length} photo${proofPhotos.length !== 1 ? 's' : ''})`}
       </button>
     </div>
   );
@@ -257,13 +321,13 @@ function ContractView({ reqId, onBack }) {
   const { requests, advanceRequests, setRequests, setAdvanceRequests, pushNotification, spaces } = useShopkeeper();
   const [signed, setSigned] = useState(false);
   const allReqs = [...requests, ...advanceRequests];
-  const req = allReqs.find(r => r.id === reqId);
+  const req = allReqs.find(r => Number(r.id) === Number(reqId));
   const isAdvance = req?.type === 'advance';
   const space = spaces.find(s => s.id === req?.spaceId);
   const today = new Date().toLocaleDateString('en-PK', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const confirmSign = () => {
-    const updater = r => r.id === reqId
+    const updater = r => Number(r.id) === Number(reqId)
       ? { ...r, contractSignedByShopkeeper: true, timelineStep: 3 }
       : r;
     if (isAdvance) setAdvanceRequests(prev => prev.map(updater));
@@ -377,15 +441,20 @@ function ContractView({ reqId, onBack }) {
 
 /* ─── Booking Detail ────────────────────────────────────────────────────────── */
 function BookingDetailView({ reqId, onBack, onGoToContract, onGoToProof, navigateToView }) {
-  const { requests, advanceRequests, spaces } = useShopkeeper();
+  const { requests, advanceRequests, spaces, disputes } = useShopkeeper();
   const allReqs = [...requests, ...advanceRequests];
-  const req = allReqs.find(r => r.id === reqId);
+  const req = allReqs.find(r => Number(r.id) === Number(reqId));
   if (!req) return <div className="p-4 text-xs text-[#6e7975]">Booking not found.</div>;
 
   const space = spaces.find(s => s.id === req.spaceId);
   const step = req.timelineStep ?? 0;
-  const totalCommission = req.monthlyBreakdown.reduce((s, m) => s + m.commission, 0);
-  const totalNet = req.monthlyBreakdown.reduce((s, m) => s + m.net, 0);
+
+  // Fallbacks to prevent crash if data is dynamically/partially synchronized
+  const duration = req.durationMonths || getDurationMonths(req);
+  const monthlyBreakdown = req.monthlyBreakdown || generateMonthlyBreakdown(req.offeredPrice, duration, req.startDate);
+
+  const totalCommission = monthlyBreakdown.reduce((s, m) => s + m.commission, 0);
+  const totalNet = monthlyBreakdown.reduce((s, m) => s + m.net, 0);
 
   const escrowStatusStyle = (st) => {
     if (st === 'Released') return 'bg-[#005344]/10 text-[#005344]';
@@ -470,7 +539,7 @@ function BookingDetailView({ reqId, onBack, onGoToContract, onGoToProof, navigat
               </tr>
             </thead>
             <tbody>
-              {req.monthlyBreakdown.map((row, i) => (
+              {monthlyBreakdown.map((row, i) => (
                 <tr key={i} className="border-t border-[#f0f0f0]">
                   <td className="px-2 py-2 font-bold text-[#181c1b] whitespace-nowrap">{row.month.split(' ')[0]}</td>
                   <td className="px-2 py-2 text-[#3e4945]">{(row.gross / 1000).toFixed(0)}k</td>
@@ -532,14 +601,38 @@ function BookingDetailView({ reqId, onBack, onGoToContract, onGoToProof, navigat
         <p><span className="font-black">Cancellation Policy:</span> Full refund only before contract signing. No refund after product is placed.</p>
       </div>
 
-      {/* raise dispute */}
-      {step >= 4 && (
-        <button onClick={() => navigateToView('disputes', 'main')}
-          className="w-full py-3 border-2 border-[#ba1a1a] text-[#ba1a1a] rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#ba1a1a]/5 transition-colors">
-          <span className="material-symbols-outlined text-[16px]">report_problem</span>
-          Raise a Dispute
-        </button>
-      )}
+      {/* raise / view dispute */}
+      {(() => {
+        const relatedDispute = disputes?.find(d => Number(d.requestId) === Number(reqId));
+        if (relatedDispute) {
+          const isOpen = relatedDispute.status === 'Open';
+          return (
+            <button
+              onClick={() => navigateToView('disputes', 'detail', relatedDispute.id)}
+              className={`w-full py-3 border-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+                isOpen
+                  ? 'border-[#ba1a1a] text-[#ba1a1a] hover:bg-[#ba1a1a]/5'
+                  : 'border-[#005344] text-[#005344] hover:bg-[#005344]/5'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {isOpen ? 'report_problem' : 'check_circle'}
+              </span>
+              {isOpen ? 'View Active Dispute' : 'View Resolved Dispute'}
+            </button>
+          );
+        }
+        if (step >= 4) {
+          return (
+            <button onClick={() => navigateToView('disputes', 'main')}
+              className="w-full py-3 border-2 border-[#ba1a1a] text-[#ba1a1a] rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#ba1a1a]/5 transition-colors">
+              <span className="material-symbols-outlined text-[16px]">report_problem</span>
+              Raise a Dispute
+            </button>
+          );
+        }
+        return null;
+      })()}
     </div>
   );
 }
@@ -548,7 +641,7 @@ function BookingDetailView({ reqId, onBack, onGoToContract, onGoToProof, navigat
 function CounterOfferView({ reqId, onBack, onDone }) {
   const { requests, advanceRequests, setRequests, setAdvanceRequests, pushNotification, spaces } = useShopkeeper();
   const allReqs = [...requests, ...advanceRequests];
-  const req = allReqs.find(r => r.id === reqId);
+  const req = allReqs.find(r => Number(r.id) === Number(reqId));
   const isAdvance = req?.type === 'advance';
 
   const [startDate, setStartDate] = useState('');
@@ -575,7 +668,7 @@ function CounterOfferView({ reqId, onBack, onDone }) {
       newPrice: Number(price),
       note,
     };
-    const updater = r => r.id === reqId
+    const updater = r => Number(r.id) === Number(reqId)
       ? { ...r, status: 'Countered', counterHistory: [...(r.counterHistory || []), entry] }
       : r;
     if (isAdvance) setAdvanceRequests(prev => prev.map(updater));
@@ -671,7 +764,7 @@ function CounterOfferView({ reqId, onBack, onDone }) {
 function RequestDetailView({ reqId, onBack, onCounter, onBooking }) {
   const { requests, advanceRequests, setRequests, setAdvanceRequests, pushNotification, spaces } = useShopkeeper();
   const allReqs = [...requests, ...advanceRequests];
-  const req = allReqs.find(r => r.id === reqId);
+  const req = allReqs.find(r => Number(r.id) === Number(reqId));
   if (!req) return <div className="p-4 text-xs">Request not found.</div>;
 
   const isAdvance = req.type === 'advance';
@@ -679,7 +772,17 @@ function RequestDetailView({ reqId, onBack, onCounter, onBooking }) {
   const canAct = req.status === 'Pending' || req.status === 'Countered';
 
   const accept = () => {
-    const updater = r => r.id === reqId ? { ...r, status: 'Accepted', timelineStep: 1 } : r;
+    const duration = req.durationMonths || getDurationMonths(req);
+    const breakdown = req.monthlyBreakdown || generateMonthlyBreakdown(req.offeredPrice, duration, req.startDate);
+    const updater = r => Number(r.id) === Number(reqId) 
+      ? { 
+          ...r, 
+          status: 'Accepted', 
+          timelineStep: 1,
+          durationMonths: duration,
+          monthlyBreakdown: breakdown
+        } 
+      : r;
     if (isAdvance) setAdvanceRequests(prev => prev.map(updater));
     else setRequests(prev => prev.map(updater));
     pushNotification('request', 'Request Accepted', `You accepted ${req.brand}'s booking request.`, { tab: 'requests', view: 'booking-detail', id: reqId });
@@ -687,7 +790,7 @@ function RequestDetailView({ reqId, onBack, onCounter, onBooking }) {
   };
 
   const reject = () => {
-    const updater = r => r.id === reqId ? { ...r, status: 'Rejected' } : r;
+    const updater = r => Number(r.id) === Number(reqId) ? { ...r, status: 'Rejected' } : r;
     if (isAdvance) setAdvanceRequests(prev => prev.map(updater));
     else setRequests(prev => prev.map(updater));
     onBack();
@@ -752,7 +855,7 @@ function RequestDetailView({ reqId, onBack, onCounter, onBooking }) {
       <div className="bg-white border border-[#e0e3e0] rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] space-y-2.5">
         {[
           ['calendar_today', 'Requested Dates', req.requestedDates],
-          ['schedule', 'Duration', `${req.durationMonths} month${req.durationMonths !== 1 ? 's' : ''}`],
+          ['schedule', 'Duration', `${req.durationMonths || getDurationMonths(req)} month${(req.durationMonths || getDurationMonths(req)) !== 1 ? 's' : ''}`],
           ['payments', 'Offered Price', `PKR ${req.offeredPrice?.toLocaleString()}`],
           ['trending_up', 'Per Month', `PKR ${req.pricePerMonth?.toLocaleString()}/mo`],
           ['inventory_2', 'Product', req.productName],
@@ -959,42 +1062,47 @@ export default function RequestsTab() {
   }
 
   if (currentView === 'proof-upload' && viewParams != null) {
-    return <ProofUploadView reqId={viewParams} onBack={() => setBooking(viewParams)} />;
+    const currentId = viewParams;
+    return <ProofUploadView reqId={currentId} onBack={() => setBooking(currentId)} />;
   }
 
   if (currentView === 'contract' && viewParams != null) {
-    return <ContractView reqId={viewParams} onBack={() => setBooking(viewParams)} />;
+    const currentId = viewParams;
+    return <ContractView reqId={currentId} onBack={() => setBooking(currentId)} />;
   }
 
   if (currentView === 'booking-detail' && viewParams != null) {
+    const currentId = viewParams;
     return (
       <BookingDetailView
-        reqId={viewParams}
-        onBack={() => setCurrentView('main')}
-        onGoToContract={() => setContract(viewParams)}
-        onGoToProof={() => setProof(viewParams)}
+        reqId={currentId}
+        onBack={() => { setCurrentView('main'); setViewParams(null); }}
+        onGoToContract={() => setContract(currentId)}
+        onGoToProof={() => setProof(currentId)}
         navigateToView={navigateToView}
       />
     );
   }
 
   if (currentView === 'counter-offer' && viewParams != null) {
+    const currentId = viewParams;
     return (
       <CounterOfferView
-        reqId={viewParams}
-        onBack={() => setDetail(viewParams)}
-        onDone={() => setDetail(viewParams)}
+        reqId={currentId}
+        onBack={() => setDetail(currentId)}
+        onDone={() => setDetail(currentId)}
       />
     );
   }
 
   if (currentView === 'detail' && viewParams != null) {
+    const currentId = viewParams;
     return (
       <RequestDetailView
-        reqId={viewParams}
+        reqId={currentId}
         onBack={() => setCurrentView('main')}
-        onCounter={() => setCounter(viewParams)}
-        onBooking={() => setBooking(viewParams)}
+        onCounter={() => setCounter(currentId)}
+        onBooking={() => setBooking(currentId)}
       />
     );
   }

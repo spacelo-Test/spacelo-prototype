@@ -27,6 +27,8 @@ export default function InventoryTab() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [isInlineSearch, setIsInlineSearch] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showCustomProductInput, setShowCustomProductInput] = useState(false);
+  const [customProductText, setCustomProductText] = useState("");
 
   // Helper for space type labels
   const getSpaceTypeLabel = (type) => {
@@ -87,28 +89,38 @@ export default function InventoryTab() {
 
   // Handle saving space (create or update)
   const handleSaveSpace = () => {
+    const generatedNickname = `${getSpaceTypeLabel(newSpaceData.type)} — Floor ${newSpaceData.floor}`;
+    const spaceToSave = {
+      ...newSpaceData,
+      nickname: generatedNickname,
+      dimensions: {
+        ...newSpaceData.dimensions,
+        unit: "inches"
+      }
+    };
     if (isEditing) {
       // Update existing space
       setSpaces((prev) =>
-        prev.map((s) => (s.id === viewParams ? { ...newSpaceData } : s)),
+        prev.map((s) => (s.id === viewParams ? { ...spaceToSave, id: s.id, status: s.status, listingId: s.listingId } : s)),
       );
       pushNotification(
         "admin",
         "Space Updated",
-        `Physical inventory details for "${newSpaceData.nickname}" have been updated.`,
+        `Physical inventory details for "${generatedNickname}" have been updated.`,
         { tab: "inventory", view: "space-detail", id: viewParams },
       );
+      alert("Space details updated successfully!");
     } else {
       // Create new space
       const newId =
         spaces.length > 0 ? Math.max(...spaces.map((s) => s.id)) + 1 : 1;
       const createdSpace = {
-        ...newSpaceData,
+        ...spaceToSave,
         id: newId,
         status: "Unlisted",
         listingId: null,
         photos:
-          newSpaceData.photos.length > 0
+          newSpaceData.photos && newSpaceData.photos.length > 0
             ? newSpaceData.photos
             : [
                 "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80",
@@ -118,11 +130,14 @@ export default function InventoryTab() {
       pushNotification(
         "admin",
         "New Space Created",
-        `"${newSpaceData.nickname}" is now registered in your inventory. Create a listing to rent it out.`,
+        `"${generatedNickname}" is now registered in your inventory. Create a listing to rent it out.`,
         { tab: "inventory", view: "space-detail", id: newId },
       );
+      alert("Item added to inventory successfully!");
     }
     resetSpaceForm();
+    setShowCustomProductInput(false);
+    setCustomProductText("");
     setIsEditing(false);
     setCurrentView("main");
     setViewParams(null);
@@ -141,9 +156,7 @@ export default function InventoryTab() {
         space.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
         getSpaceTypeLabel(space.type)
           .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        (space.section &&
-          space.section.toLowerCase().includes(searchQuery.toLowerCase()));
+          .includes(searchQuery.toLowerCase());
 
       if (activeFilter === "All") return matchesSearch;
       return matchesSearch && space.status === activeFilter;
@@ -270,8 +283,7 @@ export default function InventoryTab() {
                         {space.dimensions.h} {space.dimensions.unit}
                       </div>
                       <div className="truncate">
-                        Floor {space.floor} • Aisle {space.aisle || "N/A"} •{" "}
-                        {space.section}
+                        Floor {space.floor}
                       </div>
                     </div>
                   </div>
@@ -279,27 +291,65 @@ export default function InventoryTab() {
               );
             })
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <span className="material-symbols-outlined text-[#6e7975] text-[64px]">
-                add_box
-              </span>
-              <p className="text-[#181c1b] font-bold mt-2">
-                No spaces match your filters
-              </p>
-              <p className="text-[#6e7975] text-[13px] mt-1 max-w-[240px]">
-                Start adding physical retail display spaces to your store's
-                inventory.
-              </p>
-              <button
-                onClick={() => {
-                  resetSpaceForm();
-                  setCurrentView("add-space");
-                }}
-                className="mt-4 bg-[#005344] text-white px-5 py-2 rounded-xl text-[14px] font-bold shadow-md hover:bg-[#003d32] transition-all"
-              >
-                + Add Space
-              </button>
-            </div>
+            (() => {
+              const emptyState = (() => {
+                switch (activeFilter) {
+                  case "Inactive":
+                    return {
+                      icon: "block",
+                      title: "No inactive spaces",
+                      desc: "This is the inactive tab list. Deactivated spaces from your inventory will appear here.",
+                      showBtn: true,
+                    };
+                  case "Listed":
+                    return {
+                      icon: "sell",
+                      title: "No listed spaces",
+                      desc: "Spaces with active commercial listings will appear here.",
+                      showBtn: true,
+                    };
+                  case "Unlisted":
+                    return {
+                      icon: "grid_view",
+                      title: "No unlisted spaces",
+                      desc: "All your spaces are currently listed or inactive.",
+                      showBtn: false,
+                    };
+                  default:
+                    return {
+                      icon: "add_box",
+                      title: "No spaces match your filters",
+                      desc: "Start adding physical retail display spaces to your store's inventory.",
+                      showBtn: true,
+                    };
+                }
+              })();
+
+              return (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <span className="material-symbols-outlined text-[#6e7975] text-[64px]">
+                    {emptyState.icon}
+                  </span>
+                  <p className="text-[#181c1b] font-bold mt-2">
+                    {emptyState.title}
+                  </p>
+                  <p className="text-[#6e7975] text-[13px] mt-1 max-w-[240px]">
+                    {emptyState.desc}
+                  </p>
+                  {emptyState.showBtn && (
+                    <button
+                      onClick={() => {
+                        resetSpaceForm();
+                        setCurrentView("add-space");
+                      }}
+                      className="mt-4 bg-[#005344] text-white px-5 py-2 rounded-xl text-[14px] font-bold shadow-md hover:bg-[#003d32] transition-all"
+                    >
+                      + Add Space
+                    </button>
+                  )}
+                </div>
+              );
+            })()
           )}
         </div>
 
@@ -317,10 +367,10 @@ export default function InventoryTab() {
     );
   }
 
-  // VIEW 2: Add/Edit Space 5-Step Form
+  // VIEW 2: Add/Edit Space 3-Step Form
   if (currentView === "add-space") {
     const handleNext = () => {
-      if (newSpaceStep < 5) {
+      if (newSpaceStep < 3) {
         setNewSpaceStep(newSpaceStep + 1);
       } else {
         handleSaveSpace();
@@ -332,6 +382,8 @@ export default function InventoryTab() {
         setNewSpaceStep(newSpaceStep - 1);
       } else {
         resetSpaceForm();
+        setShowCustomProductInput(false);
+        setCustomProductText("");
         setIsEditing(false);
         setCurrentView("main");
         setViewParams(null);
@@ -366,9 +418,8 @@ export default function InventoryTab() {
       ];
 
       const currentPhotos = newSpaceData.photos || [];
-      if (currentPhotos.length >= 5) return; // limit to 5
+      if (currentPhotos.length >= 5) return;
 
-      // Add a photo from demo array not already added, or just random
       const newPhoto = demoPhotos[currentPhotos.length % demoPhotos.length];
       setNewSpaceData((prev) => ({
         ...prev,
@@ -383,18 +434,16 @@ export default function InventoryTab() {
       }));
     };
 
-    const isStep1Valid = !!newSpaceData.type;
-    const isStep2Valid =
-      !!newSpaceData.nickname &&
+    const isStep1Valid =
+      !!newSpaceData.type &&
       !!newSpaceData.floor &&
-      !!newSpaceData.section &&
       !!newSpaceData.dimensions.l &&
       !!newSpaceData.dimensions.w &&
-      !!newSpaceData.dimensions.h;
-    const isStep3Valid = true; // Min photo requirement is optional or default
-    const isStep4Valid =
-      !!newSpaceData.footfall && newSpaceData.suitableProducts.length > 0;
-    const isStep5Valid = true;
+      !!newSpaceData.dimensions.h &&
+      !!newSpaceData.footfall &&
+      newSpaceData.suitableProducts && newSpaceData.suitableProducts.length > 0;
+    const isStep2Valid = true;
+    const isStep3Valid = true;
 
     const getStepValidity = (step) => {
       switch (step) {
@@ -404,10 +453,6 @@ export default function InventoryTab() {
           return isStep2Valid;
         case 3:
           return isStep3Valid;
-        case 4:
-          return isStep4Valid;
-        case 5:
-          return isStep5Valid;
         default:
           return false;
       }
@@ -437,10 +482,10 @@ export default function InventoryTab() {
             {/* Active Progress Line */}
             <div
               className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-[#005344] transition-all duration-300 z-0"
-              style={{ width: `${((newSpaceStep - 1) / 4) * 100}%` }}
+              style={{ width: `${((newSpaceStep - 1) / 2) * 100}%` }}
             ></div>
 
-            {[1, 2, 3, 4, 5].map((stepNum) => (
+            {[1, 2, 3].map((stepNum) => (
               <div
                 key={stepNum}
                 className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[12px] relative z-10 transition-all ${
@@ -462,189 +507,87 @@ export default function InventoryTab() {
             ))}
           </div>
           <div className="flex justify-between text-[10px] text-[#6e7975] font-semibold mt-1.5 px-0">
-            <span>Type</span>
-            <span>Identity</span>
-            <span>Photos</span>
             <span>Details</span>
+            <span>Photos</span>
             <span>Review</span>
           </div>
         </div>
 
         {/* Form Body */}
         <div className="flex-grow overflow-y-auto p-4">
-          {/* STEP 1: SPACE TYPE */}
+          {/* STEP 1: DETAILS */}
           {newSpaceStep === 1 && (
             <div className="space-y-4">
               <div>
                 <h2 className="text-[18px] font-black text-[#181c1b]">
-                  What type of display space is this?
+                  Space Details
                 </h2>
                 <p className="text-[13px] text-[#6e7975] mt-1">
-                  Select the option that best represents the physical placement
-                  area.
+                  Provide specifications and details for your display space.
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: "shelf", label: "Shelf", icon: "shelves" },
-                  { id: "end_cap", label: "End-Cap", icon: "view_carousel" },
-                  {
-                    id: "window_display",
-                    label: "Window Display",
-                    icon: "storefront",
-                  },
-                  {
-                    id: "floor_stand",
-                    label: "Floor Stand",
-                    icon: "view_in_ar",
-                  },
-                  {
-                    id: "checkout_counter",
-                    label: "Checkout Counter",
-                    icon: "point_of_sale",
-                  },
-                  {
-                    id: "entrance_display",
-                    label: "Entrance Display",
-                    icon: "door_front",
-                  },
-                  {
-                    id: "promotional_aisle",
-                    label: "Promotional Aisle",
-                    icon: "space_bar",
-                  },
-                  { id: "other", label: "Other", icon: "category" },
-                ].map((typeItem) => {
-                  const isSelected = newSpaceData.type === typeItem.id;
-                  return (
-                    <div
-                      key={typeItem.id}
-                      onClick={() => handleSelectType(typeItem.id)}
-                      className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-all h-24 ${
-                        isSelected
-                          ? "border-[#005344] bg-[#005344]/5 text-[#005344] ring-2 ring-[#005344]/15"
-                          : "border-[#e0e3e0] bg-white text-[#181c1b] hover:bg-gray-50"
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-[28px] mb-1">
-                        {typeItem.icon}
-                      </span>
-                      <span className="text-[12px] font-bold">
-                        {typeItem.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {newSpaceData.type === "other" && (
+              <div className="space-y-3.5">
+                {/* Space Type */}
                 <div className="space-y-1">
-                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
-                    Please specify space type
+                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider block">
+                    Space Type*
                   </label>
-                  <input
-                    type="text"
-                    value={newSpaceData.otherTypeLabel || ""}
-                    onChange={handleTypeOtherTextChange}
-                    placeholder="E.g., Cash Counter Side Shelf"
+                  <select
+                    value={newSpaceData.type}
+                    onChange={(e) => setNewSpaceData(prev => ({ ...prev, type: e.target.value }))}
                     className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
-                  />
+                  >
+                    <option value="">Select type...</option>
+                    <option value="shelf">Shelf</option>
+                    <option value="end_cap">End-Cap</option>
+                    <option value="window_display">Window Display</option>
+                    <option value="floor_stand">Floor Stand</option>
+                    <option value="checkout_counter">Checkout Counter</option>
+                    <option value="entrance_display">Entrance Display</option>
+                    <option value="promotional_aisle">Promotional Aisle</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* STEP 2: SPACE IDENTITY */}
-          {newSpaceStep === 2 && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-[18px] font-black text-[#181c1b]">
-                  Identify and locate your space
-                </h2>
-                <p className="text-[13px] text-[#6e7975] mt-1">
-                  Provide clear identifiers so brands know exactly where this
-                  space is inside your shop.
-                </p>
-              </div>
+                {newSpaceData.type === "other" && (
+                  <div className="space-y-1">
+                    <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
+                      Please specify space type*
+                    </label>
+                    <input
+                      type="text"
+                      value={newSpaceData.otherTypeLabel || ""}
+                      onChange={handleTypeOtherTextChange}
+                      placeholder="E.g., Cash Counter Side Shelf"
+                      className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
+                    />
+                  </div>
+                )}
 
-              <div className="space-y-3">
+                {/* Floor */}
                 <div className="space-y-1">
-                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
-                    Space Nickname*
+                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider block">
+                    Floor*
                   </label>
                   <input
                     type="text"
-                    value={newSpaceData.nickname}
+                    value={newSpaceData.floor}
                     onChange={(e) =>
                       setNewSpaceData((prev) => ({
                         ...prev,
-                        nickname: e.target.value,
+                        floor: e.target.value,
                       }))
                     }
-                    placeholder="E.g., Shelf B — Near Beverages"
+                    placeholder="E.g., Ground"
                     className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
                   />
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
-                      Floor*
-                    </label>
-                    <input
-                      type="text"
-                      value={newSpaceData.floor}
-                      onChange={(e) =>
-                        setNewSpaceData((prev) => ({
-                          ...prev,
-                          floor: e.target.value,
-                        }))
-                      }
-                      placeholder="E.g., Ground"
-                      className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
-                      Aisle
-                    </label>
-                    <input
-                      type="text"
-                      value={newSpaceData.aisle}
-                      onChange={(e) =>
-                        setNewSpaceData((prev) => ({
-                          ...prev,
-                          aisle: e.target.value,
-                        }))
-                      }
-                      placeholder="E.g., 4"
-                      className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
-                      Section*
-                    </label>
-                    <input
-                      type="text"
-                      value={newSpaceData.section}
-                      onChange={(e) =>
-                        setNewSpaceData((prev) => ({
-                          ...prev,
-                          section: e.target.value,
-                        }))
-                      }
-                      placeholder="E.g., Snacks"
-                      className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
-                    />
-                  </div>
                 </div>
 
                 {/* Dimensions */}
                 <div className="space-y-1">
-                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
-                    Dimensions (L × W × H)*
+                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider block">
+                    Dimensions (L × W × H in inches)*
                   </label>
                   <div className="flex gap-2 items-center">
                     <input
@@ -685,38 +628,150 @@ export default function InventoryTab() {
                       placeholder="Height"
                       className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
                     />
-                    <select
-                      value={newSpaceData.dimensions.unit}
-                      onChange={(e) =>
+                  </div>
+                </div>
+
+                {/* Footfall */}
+                <div className="space-y-1">
+                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider block">
+                    Estimated Footfall*
+                  </label>
+                  <select
+                    value={newSpaceData.footfall}
+                    onChange={(e) =>
+                      setNewSpaceData((prev) => ({
+                        ...prev,
+                        footfall: e.target.value,
+                      }))
+                    }
+                    className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
+                  >
+                    <option value="">Select footfall level...</option>
+                    <option value="Low (Under 50)">Low (Under 50)</option>
+                    <option value="Medium (50–200)">Medium (50–200)</option>
+                    <option value="High (200+)">High (200+)</option>
+                  </select>
+                </div>
+
+                {/* Suitable Products Dropdown + Tag Chips */}
+                <div className="space-y-2">
+                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider block">
+                    Suitable Product Types* (Select to add)
+                  </label>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "Other") {
+                        setShowCustomProductInput(true);
+                      } else if (val && !newSpaceData.suitableProducts.includes(val)) {
                         setNewSpaceData((prev) => ({
                           ...prev,
-                          dimensions: {
-                            ...prev.dimensions,
-                            unit: e.target.value,
-                          },
-                        }))
+                          suitableProducts: [...prev.suitableProducts, val],
+                        }));
                       }
-                      className="bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344] w-20 flex-shrink-0"
-                    >
-                      <option value="cm">cm</option>
-                      <option value="inches">in</option>
-                    </select>
-                  </div>
+                    }}
+                    className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
+                  >
+                    <option value="">Select suitable products...</option>
+                    {["FMCG", "Beverages", "Snacks", "Cosmetics", "Electronics", "Apparel", "Other"].map((prod) => (
+                      <option key={prod} value={prod}>{prod}</option>
+                    ))}
+                  </select>
+                  {showCustomProductInput && (
+                    <div className="flex gap-2 items-center mt-2">
+                      <input
+                        type="text"
+                        value={customProductText}
+                        onChange={(e) => setCustomProductText(e.target.value)}
+                        placeholder="Enter other category..."
+                        className="flex-grow bg-white border border-[#e0e3e0] p-2.5 rounded-xl text-[13px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (customProductText.trim() && !newSpaceData.suitableProducts.includes(customProductText.trim())) {
+                            setNewSpaceData((prev) => ({
+                              ...prev,
+                              suitableProducts: [...prev.suitableProducts, customProductText.trim()],
+                            }));
+                          }
+                          setCustomProductText("");
+                          setShowCustomProductInput(false);
+                        }}
+                        className="bg-[#005344] text-white px-4 py-2.5 rounded-xl text-[13px] font-bold hover:bg-[#003d32]"
+                      >
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomProductText("");
+                          setShowCustomProductInput(false);
+                        }}
+                        className="text-[#de350b] hover:underline text-[12px] font-bold px-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                  {newSpaceData.suitableProducts && newSpaceData.suitableProducts.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {newSpaceData.suitableProducts.map((prod) => (
+                        <span
+                          key={prod}
+                          className="bg-[#005344] text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5"
+                        >
+                          {prod}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setNewSpaceData((prev) => ({
+                                ...prev,
+                                suitableProducts: prev.suitableProducts.filter((p) => p !== prod),
+                              }))
+                            }
+                            className="hover:text-red-300 font-black text-[13px] leading-none shrink-0"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Nearby Context */}
+                <div className="space-y-1">
+                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider block">
+                    Nearby Context (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={newSpaceData.nearbyContext}
+                    onChange={(e) =>
+                      setNewSpaceData((prev) => ({
+                        ...prev,
+                        nearbyContext: e.target.value,
+                      }))
+                    }
+                    placeholder="Describe what products, banners, or checkout displays are nearby. E.g., Adjacent to cash register #2, next to bubblegum racks."
+                    className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344] resize-none"
+                  ></textarea>
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 3: PHOTOS */}
-          {newSpaceStep === 3 && (
+          {/* STEP 2: PHOTOS */}
+          {newSpaceStep === 2 && (
             <div className="space-y-4">
               <div>
                 <h2 className="text-[18px] font-black text-[#181c1b]">
                   Upload space photos
                 </h2>
                 <p className="text-[13px] text-[#6e7975] mt-1">
-                  Upload clear photos showing the current condition and position
-                  of the space.
+                  Upload clear photos showing the current condition and position of the space.
                 </p>
               </div>
 
@@ -738,8 +793,7 @@ export default function InventoryTab() {
                 </button>
 
                 <div className="text-[12px] text-[#6e7975] font-semibold text-right">
-                  {newSpaceData.photos ? newSpaceData.photos.length : 0} photos
-                  added (min 3, max 5 recommended)
+                  {newSpaceData.photos ? newSpaceData.photos.length : 0} photos added (min 3, max 5 recommended)
                 </div>
 
                 {/* Photos Grid */}
@@ -777,117 +831,15 @@ export default function InventoryTab() {
             </div>
           )}
 
-          {/* STEP 4: DETAILS */}
-          {newSpaceStep === 4 && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-[18px] font-black text-[#181c1b]">
-                  Add footfall and product context
-                </h2>
-                <p className="text-[13px] text-[#6e7975] mt-1">
-                  Help companies evaluate if this space matches their brand
-                  profile.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                {/* Footfall group */}
-                <div className="space-y-1.5">
-                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
-                    Estimated Footfall*
-                  </label>
-                  <div className="flex gap-2">
-                    {["Low (Under 50)", "Medium (50–200)", "High (200+)"].map(
-                      (level) => (
-                        <button
-                          key={level}
-                          type="button"
-                          onClick={() =>
-                            setNewSpaceData((prev) => ({
-                              ...prev,
-                              footfall: level,
-                            }))
-                          }
-                          className={`flex-grow py-3 px-2 rounded-xl text-[12px] font-bold border transition-all text-center ${
-                            newSpaceData.footfall === level
-                              ? "bg-[#005344] border-[#005344] text-white"
-                              : "bg-white border-[#e0e3e0] text-[#181c1b] hover:bg-gray-50"
-                          }`}
-                        >
-                          {level}
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </div>
-
-                {/* Suitable product tags */}
-                <div className="space-y-1.5">
-                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
-                    Suitable Product Types* (Select all that apply)
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      "FMCG",
-                      "Beverages",
-                      "Snacks",
-                      "Cosmetics",
-                      "Electronics",
-                      "Apparel",
-                      "Other",
-                    ].map((prod) => {
-                      const isSelected =
-                        newSpaceData.suitableProducts.includes(prod);
-                      return (
-                        <button
-                          key={prod}
-                          type="button"
-                          onClick={() => toggleSuitableProduct(prod)}
-                          className={`px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
-                            isSelected
-                              ? "bg-[#005344] border-[#005344] text-white"
-                              : "bg-white border-[#e0e3e0] text-[#6e7975] hover:bg-gray-50"
-                          }`}
-                        >
-                          {prod}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Nearby context */}
-                <div className="space-y-1">
-                  <label className="text-[12px] font-black text-[#005344] uppercase tracking-wider">
-                    Nearby Context (Optional)
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={newSpaceData.nearbyContext}
-                    onChange={(e) =>
-                      setNewSpaceData((prev) => ({
-                        ...prev,
-                        nearbyContext: e.target.value,
-                      }))
-                    }
-                    placeholder="Describe what products, banners, or checkout displays are nearby. E.g., Adjacent to cash register #2, next to the bubblegum racks."
-                    className="w-full bg-white border border-[#e0e3e0] p-3 rounded-xl text-[14px] outline-none focus:ring-2 focus:ring-[#005344]/25 focus:border-[#005344]"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 5: REVIEW & SAVE */}
-          {newSpaceStep === 5 && (
+          {/* STEP 3: REVIEW & SAVE */}
+          {newSpaceStep === 3 && (
             <div className="space-y-4">
               <div>
                 <h2 className="text-[18px] font-black text-[#181c1b]">
                   Review details & save
                 </h2>
                 <p className="text-[13px] text-[#6e7975] mt-1">
-                  Review the space profile before adding it to your active
-                  inventory.
+                  Review the space profile before adding it to your active inventory.
                 </p>
               </div>
 
@@ -914,12 +866,12 @@ export default function InventoryTab() {
 
                 {/* Grid details */}
                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[13px] border-t border-[#e0e3e0] pt-3">
-                  <div>
+                  <div className="col-span-2">
                     <span className="text-[#6e7975] block text-[11px] font-semibold uppercase tracking-wider">
-                      Nickname
+                      Nickname (Auto-generated)
                     </span>
-                    <span className="font-bold text-[#181c1b]">
-                      {newSpaceData.nickname}
+                    <span className="font-black text-[#005344]">
+                      {newSpaceData.type ? `${getSpaceTypeLabel(newSpaceData.type)} — Floor ${newSpaceData.floor || ''}` : ''}
                     </span>
                   </div>
                   <div>
@@ -932,11 +884,10 @@ export default function InventoryTab() {
                   </div>
                   <div>
                     <span className="text-[#6e7975] block text-[11px] font-semibold uppercase tracking-wider">
-                      Location
+                      Floor
                     </span>
                     <span className="font-bold text-[#181c1b]">
-                      Floor {newSpaceData.floor} • Aisle{" "}
-                      {newSpaceData.aisle || "N/A"} • {newSpaceData.section}
+                      Floor {newSpaceData.floor}
                     </span>
                   </div>
                   <div>
@@ -944,9 +895,7 @@ export default function InventoryTab() {
                       Dimensions
                     </span>
                     <span className="font-bold text-[#181c1b]">
-                      {newSpaceData.dimensions.l} × {newSpaceData.dimensions.w}{" "}
-                      × {newSpaceData.dimensions.h}{" "}
-                      {newSpaceData.dimensions.unit}
+                      {newSpaceData.dimensions.l} × {newSpaceData.dimensions.w} × {newSpaceData.dimensions.h} inches
                     </span>
                   </div>
                   <div>
@@ -957,12 +906,12 @@ export default function InventoryTab() {
                       {newSpaceData.footfall}
                     </span>
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <span className="text-[#6e7975] block text-[11px] font-semibold uppercase tracking-wider">
                       Suitable Products
                     </span>
                     <span className="font-bold text-[#181c1b]">
-                      {newSpaceData.suitableProducts.join(", ")}
+                      {newSpaceData.suitableProducts ? newSpaceData.suitableProducts.join(", ") : ""}
                     </span>
                   </div>
                 </div>
@@ -1002,8 +951,8 @@ export default function InventoryTab() {
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >
-            {newSpaceStep === 5 ? "Save Space" : "Continue"}
-            {newSpaceStep < 5 && (
+            {newSpaceStep === 3 ? "Submit" : "Continue"}
+            {newSpaceStep < 3 && (
               <span className="material-symbols-outlined text-[16px]">
                 arrow_forward
               </span>
@@ -1046,6 +995,20 @@ export default function InventoryTab() {
         `"${space.nickname}" status is now set to Inactive.`,
         { tab: "inventory", view: "space-detail", id: space.id },
       );
+      setCurrentView("main");
+    };
+
+    const handleActivate = () => {
+      setSpaces((prev) =>
+        prev.map((s) => (s.id === space.id ? { ...s, status: "Unlisted" } : s)),
+      );
+      pushNotification(
+        "admin",
+        "Space Activated",
+        `"${space.nickname}" status is now set back to Unlisted (Active).`,
+        { tab: "inventory", view: "space-detail", id: space.id },
+      );
+      alert("Space activated successfully!");
       setCurrentView("main");
     };
 
@@ -1143,11 +1106,10 @@ export default function InventoryTab() {
               </div>
               <div>
                 <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">
-                  Store Location
+                  Floor
                 </span>
                 <span className="font-bold text-[#181c1b]">
-                  Floor {space.floor} • Aisle {space.aisle || "N/A"} •{" "}
-                  {space.section}
+                  Floor {space.floor}
                 </span>
               </div>
               <div>
@@ -1201,27 +1163,37 @@ export default function InventoryTab() {
             </button>
 
             <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={handleDeactivate}
-                disabled={space.status === "Inactive" || space.status === "Listed"}
-                className={`py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 ${
-                  space.status === "Inactive" || space.status === "Listed"
-                    ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
-                    : "border-[#de350b] text-[#de350b] hover:bg-[#de350b]/5 bg-white"
-                }`}
-                title={
-                  space.status === "Listed"
-                    ? "Cannot deactivate listed space"
-                    : space.status === "Inactive"
-                    ? "Space is already inactive"
-                    : ""
-                }
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  block
-                </span>
-                Deactivate
-              </button>
+              {space.status === "Inactive" ? (
+                <button
+                  onClick={handleActivate}
+                  className="py-3 border border-[#005344] text-[#005344] hover:bg-[#005344]/5 bg-white rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    check_circle
+                  </span>
+                  Activate Space
+                </button>
+              ) : (
+                <button
+                  onClick={handleDeactivate}
+                  disabled={space.status === "Listed"}
+                  className={`py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 ${
+                    space.status === "Listed"
+                      ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
+                      : "border-[#de350b] text-[#de350b] hover:bg-[#de350b]/5 bg-white"
+                  }`}
+                  title={
+                    space.status === "Listed"
+                      ? "Cannot deactivate listed space"
+                      : ""
+                  }
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    block
+                  </span>
+                  Deactivate
+                </button>
+              )}
 
               <button
                 onClick={handleDeleteSpace}
