@@ -191,7 +191,7 @@ function CalendarView({ onBack }) {
 
 /* ─── Proof Upload ──────────────────────────────────────────────────────────── */
 function ProofUploadView({ reqId, onBack }) {
-  const { requests, advanceRequests, setRequests, setAdvanceRequests, pushNotification, disputes, setDisputes, navigateToView } = useShopkeeper();
+  const { requests, advanceRequests, setRequests, setAdvanceRequests, pushNotification, disputes, setDisputes, navigateToView, resolveDisputeAndRestoreBooking } = useShopkeeper();
   const [proofPhotos, setProofPhotos] = useState([]);
   const allReqs = [...requests, ...advanceRequests];
   const req = allReqs.find(r => Number(r.id) === Number(reqId));
@@ -214,19 +214,7 @@ function ProofUploadView({ reqId, onBack }) {
     else setRequests(prev => prev.map(updater));
 
     if (openDispute) {
-      setDisputes(prev =>
-        prev.map(d => Number(d.id) === Number(openDispute.id)
-          ? {
-              ...d,
-              status: 'Resolved',
-              timeline: [
-                ...d.timeline,
-                { event: 'Dispute resolved (new proof uploaded)', time: 'Just now', by: 'shopkeeper' }
-              ]
-            }
-          : d
-        )
-      );
+      resolveDisputeAndRestoreBooking(openDispute.id, reqId);
       pushNotification('dispute', 'Dispute Resolved', `Dispute resolved for ${req?.brand} by uploading new proof.`, { tab: 'disputes', view: 'detail', id: openDispute.id });
       navigateToView('disputes', 'main');
     } else {
@@ -975,7 +963,9 @@ function InboxView({ initialTab, spaces, onSelectReq, navigateToView }) {
   const [statusFilter, setStatusFilter] = useState('All');
   const statuses = ['All', 'Pending', 'Countered', 'Accepted', 'Rejected'];
 
-  const pool = inboxTab === 'regular' ? requests : advanceRequests;
+  const pool = inboxTab === 'regular'
+    ? requests.filter(r => r.type !== 'advance' && r.isAdvance !== true)
+    : advanceRequests.filter(r => r.type === 'advance' || r.isAdvance === true);
   const filtered = pool.filter(r => statusFilter === 'All' || r.status === statusFilter);
 
   return (

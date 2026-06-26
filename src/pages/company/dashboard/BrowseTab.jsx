@@ -196,7 +196,9 @@ export default function BrowseTab() {
 
     const duration = calculateDurationMonths(requestForm.dateStart, requestForm.dateEnd);
     const reqPayload = {
-      spaceId: selectedSpace.id,
+      spaceId: selectedSpace.spaceId || selectedSpace.id,
+      listingId: selectedSpace.listingId || null,
+      spaceName: selectedSpace.nickname || selectedSpace.name || '',
       productName: requestForm.productName,
       startDate: requestForm.dateStart,
       endDate: requestForm.dateEnd,

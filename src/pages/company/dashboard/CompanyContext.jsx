@@ -473,6 +473,26 @@ export function CompanyProvider({ children }) {
       counterHistory: [],
       ...reqData
     };
+
+    // If it's an advance request, write to both keys
+    if (newReq.isAdvance || newReq.type === 'advance') {
+      newReq.isAdvance = true;
+      newReq.type = 'advance';
+      
+      const existingAdvance = JSON.parse(localStorage.getItem('spacelo_advance_requests') || '[]');
+      if (!existingAdvance.some(r => r.id === newReq.id)) {
+        existingAdvance.push(newReq);
+        localStorage.setItem('spacelo_advance_requests', JSON.stringify(existingAdvance));
+      }
+    }
+    
+    // Also write to spacelo_requests synchronously to avoid delay
+    const existingRequests = JSON.parse(localStorage.getItem('spacelo_requests') || '[]');
+    if (!existingRequests.some(r => r.id === newReq.id)) {
+      existingRequests.push(newReq);
+      localStorage.setItem('spacelo_requests', JSON.stringify(existingRequests));
+    }
+
     setRequests(prev => [newReq, ...prev]);
   };
 
@@ -622,7 +642,7 @@ export function CompanyProvider({ children }) {
   };
 
   const sendAdvanceRequest = (reqData) => {
-    addRequest({ ...reqData, isAdvance: true });
+    addRequest({ ...reqData, isAdvance: true, type: 'advance' });
   };
 
   // Sync Outgoing Requests to localStorage
@@ -640,7 +660,7 @@ export function CompanyProvider({ children }) {
       
       const liveListings = sListings.filter(l => l.status === 'Live');
       setSpaces(prev => {
-        const base = prev.filter(s => s.id < 1000);
+        const base = prev.filter(s => !s.listingId);
         const dynamic = liveListings.map(listing => {
           const space = sSpaces.find(s => s.id === listing.spaceId);
           if (!space) return null;
@@ -652,8 +672,10 @@ export function CompanyProvider({ children }) {
           }
 
           return {
-            id: listing.id + 1000,
-            originalListingId: listing.id,
+            id: listing.spaceId,
+            listingId: listing.id,
+            spaceId: listing.spaceId,
+            shopkeeperId: listing.shopkeeperId || 1,
             nickname: space.nickname,
             shop: shopName,
             branch: space.branchArea || 'Johar Town Branch',
@@ -689,7 +711,7 @@ export function CompanyProvider({ children }) {
             const sListings = JSON.parse(savedListings);
             const liveListings = sListings.filter(l => l.status === 'Live');
             setSpaces(prev => {
-              const base = prev.filter(s => s.id < 1000);
+              const base = prev.filter(s => !s.listingId);
               const dynamic = liveListings.map(listing => {
                 const space = sSpaces.find(s => s.id === listing.spaceId);
                 if (!space) return null;
@@ -698,8 +720,10 @@ export function CompanyProvider({ children }) {
                   return null;
                 }
                 return {
-                  id: listing.id + 1000,
-                  originalListingId: listing.id,
+                  id: listing.spaceId,
+                  listingId: listing.id,
+                  spaceId: listing.spaceId,
+                  shopkeeperId: listing.shopkeeperId || 1,
                   nickname: space.nickname,
                   shop: shopName,
                   branch: space.branchArea || 'Johar Town Branch',

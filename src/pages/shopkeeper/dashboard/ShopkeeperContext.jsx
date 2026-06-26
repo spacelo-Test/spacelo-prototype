@@ -547,6 +547,50 @@ export function ShopkeeperProvider({ children }) {
     }, ...prev]);
   };
 
+  const resolveDisputeAndRestoreBooking = (disputeId, requestId) => {
+    // Step 1: Mark dispute resolved in state and localStorage
+    setDisputes(prev => {
+      const next = prev.map(d =>
+        Number(d.id) === Number(disputeId)
+          ? {
+              ...d,
+              status: 'Resolved',
+              timeline: [
+                ...(d.timeline || []),
+                { event: 'Dispute resolved by shopkeeper', time: 'Just now', by: 'shopkeeper' }
+              ]
+            }
+          : d
+      );
+      localStorage.setItem('spacelo_disputes', JSON.stringify(next));
+      return next;
+    });
+
+    // Step 2: Restore request/booking status to Active in state and localStorage
+    const updateRequest = r => {
+      if (Number(r.id) === Number(requestId)) {
+        return {
+          ...r,
+          status: 'Active',
+          dispute: r.dispute ? { ...r.dispute, status: 'Resolved' } : null
+        };
+      }
+      return r;
+    };
+
+    setRequests(prev => {
+      const next = prev.map(updateRequest);
+      localStorage.setItem('spacelo_requests', JSON.stringify(next));
+      return next;
+    });
+
+    setAdvanceRequests(prev => {
+      const next = prev.map(updateRequest);
+      localStorage.setItem('spacelo_advance_requests', JSON.stringify(next));
+      return next;
+    });
+  };
+
   const resetSpaceForm = () => {
     setNewSpaceStep(1);
     setNewSpaceData({
@@ -640,7 +684,8 @@ export function ShopkeeperProvider({ children }) {
       resetSpaceForm,
       resetListingForm,
       unlistedSpaces,
-      pendingRequestsTotal
+      pendingRequestsTotal,
+      resolveDisputeAndRestoreBooking
     }}>
       {children}
     </ShopkeeperContext.Provider>

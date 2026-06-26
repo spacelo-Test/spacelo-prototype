@@ -142,9 +142,24 @@ export default function ListingsTab() {
 
     if (isEditing) {
       // Edit listing
+      const existingListing = listings.find((l) => l.id === viewParams);
+      const updatedListing = {
+        ...existingListing,
+        ...newListingData,
+        updatedAt: Date.now()
+      };
+
       setListings((prev) =>
-        prev.map((l) => (l.id === viewParams ? { ...newListingData } : l)),
+        prev.map((l) => (l.id === viewParams ? updatedListing : l)),
       );
+
+      // Write directly to localStorage synchronously
+      const savedListings = JSON.parse(localStorage.getItem('spacelo_listings') || '[]');
+      const updatedListings = savedListings.map((l) =>
+        l.id === viewParams ? updatedListing : l
+      );
+      localStorage.setItem('spacelo_listings', JSON.stringify(updatedListings));
+
       pushNotification(
         "admin",
         "Listing Updated",
