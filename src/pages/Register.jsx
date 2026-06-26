@@ -5,11 +5,13 @@ export default function Register() {
   const navigate = useNavigate();
   const [role, setRole] = useState('Shopkeeper');
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     localStorage.setItem('userRole', role);
     localStorage.setItem('fullName', name);
+    localStorage.setItem('userEmail', email);
     navigate('/verify');
   };
 
@@ -46,7 +48,15 @@ export default function Register() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[14px] font-semibold text-[#005344] uppercase tracking-wider" htmlFor="email">Email Address</label>
                   <div className="relative">
-                    <input className="w-full px-4 py-3 bg-[#F3F4F6] border border-[#e0e3e0] rounded-lg focus:ring-2 focus:ring-[#005344]/20 focus:border-[#005344] outline-none transition-all text-[16px]" id="email" placeholder="example@spacelo.pk" type="email" />
+                    <input 
+                      className="w-full px-4 py-3 bg-[#F3F4F6] border border-[#e0e3e0] rounded-lg focus:ring-2 focus:ring-[#005344]/20 focus:border-[#005344] outline-none transition-all text-[16px]" 
+                      id="email" 
+                      placeholder="example@spacelo.pk" 
+                      type="email" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
 

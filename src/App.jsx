@@ -15,25 +15,52 @@ import CompanyOnboardingStep1 from './pages/company/CompanyOnboardingStep1'
 import CompanyOnboardingStep2 from './pages/company/CompanyOnboardingStep2'
 import CompanyOnboardingStep3 from './pages/company/CompanyOnboardingStep3'
 import Dashboard from './pages/Dashboard'
+import LauncherPage from './pages/LauncherPage'
+import AdminPage from './pages/admin/AdminPage'
 
 function App() {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith('/dashboard');
+  const isAdmin = location.pathname.startsWith('/admin');
+  const isLauncher = location.pathname === '/';
 
+  // Admin panel: full-width, no phone frame
+  if (isAdmin) {
+    return (
+      <div className="font-manrope">
+        <Routes>
+          <Route path="/admin/*" element={<AdminPage />} />
+        </Routes>
+      </div>
+    );
+  }
+
+  // Launcher page: full-screen, no phone frame
+  if (isLauncher) {
+    return (
+      <div className="font-manrope">
+        <Routes>
+          <Route path="/" element={<LauncherPage />} />
+        </Routes>
+      </div>
+    );
+  }
+
+  // All other routes: wrapped in phone frame
   return (
     <div className="min-h-screen bg-gray-200 flex items-center justify-center py-4 sm:py-8 font-manrope">
       {/* Mobile Device Simulator Frame */}
       <div className="w-[375px] sm:w-[414px] h-[812px] bg-background rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden relative border-[12px] border-gray-900 flex flex-col transform translate-x-0">
         
-        {/* Fake Phone Status Bar (Optional touch for realism) */}
+        {/* Fake Phone Status Bar */}
         <div className="h-6 w-full bg-background absolute top-0 z-50 flex justify-center items-end">
-          <div className="w-32 h-5 bg-gray-900 rounded-b-2xl"></div> {/* Fake Notch */}
+          <div className="w-32 h-5 bg-gray-900 rounded-b-2xl"></div>
         </div>
 
         {/* Scrollable App Content */}
         <div className={`flex-1 ${isDashboard ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'} overflow-x-hidden pt-6 relative bg-background`}>
           <Routes>
-            <Route path="/" element={<Register />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

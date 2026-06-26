@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShopkeeperProvider } from './shopkeeper/dashboard/ShopkeeperContext';
 import DashboardShell from './shopkeeper/dashboard/DashboardShell';
@@ -8,7 +8,16 @@ import { STORAGE_KEYS } from '../lib/constants';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [isApproved, setIsApproved] = useState(false);
+  const userRole = localStorage.getItem(STORAGE_KEYS.USER_ROLE) || 'Shopkeeper';
+  const userEmail = localStorage.getItem('userEmail') || '';
+  const chainName = localStorage.getItem(STORAGE_KEYS.CHAIN_NAME) || 'Imtiaz Supermarket';
+
+  const [isApproved, setIsApproved] = useState(() => {
+    if (userRole === 'Shopkeeper') return true;
+    const status = localStorage.getItem(`spacelo_status_${userEmail}`);
+    return status === 'approved';
+  });
+
   const [verificationSubmitted, setVerificationSubmitted] = useState(
     localStorage.getItem('mallVerificationSubmitted') === 'true'
   );
@@ -22,9 +31,22 @@ export default function Dashboard() {
   const [affDoc, setAffDoc] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const userRole = localStorage.getItem(STORAGE_KEYS.USER_ROLE) || 'Shopkeeper';
+  // Poll for admin approval updates
+  useEffect(() => {
+    if (userRole === 'Shopkeeper') return;
+
+    const interval = setInterval(() => {
+      const status = localStorage.getItem(`spacelo_status_${userEmail}`);
+      if (status === 'approved') {
+        setIsApproved(true);
+        clearInterval(interval);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [userEmail, userRole]);
+
   const isMallOwner = userRole === 'Mall Owner';
-  const chainName = localStorage.getItem(STORAGE_KEYS.CHAIN_NAME) || 'Imtiaz Supermarket';
 
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
@@ -55,6 +77,26 @@ export default function Dashboard() {
       return;
     }
     localStorage.setItem('mallVerificationSubmitted', 'true');
+
+    // Dynamically push a new pending approval object for the Admin Panel to review
+    const newApproval = {
+      id: 'u_' + Date.now(),
+      name: localStorage.getItem('fullName') || 'Mall Owner',
+      role: 'Mall Owner',
+      email: userEmail || 'mall@spacelo.pk',
+      phone: signatoryContact || '+92 300 1234567',
+      businessName: chainName + ' - ' + (localStorage.getItem(STORAGE_KEYS.BRANCH_AREA) || 'Branch'),
+      chainName: chainName,
+      submittedAt: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      status: 'pending',
+      docs: ['SECP License', 'Chain Affiliation', 'NTN Certificate']
+    };
+
+    const currentPending = JSON.parse(localStorage.getItem('spacelo_pending_approvals') || '[]');
+    if (!currentPending.some(p => p.email === newApproval.email)) {
+      localStorage.setItem('spacelo_pending_approvals', JSON.stringify([...currentPending, newApproval]));
+    }
+
     setVerificationSubmitted(true);
     setErrorMsg('');
   };
@@ -255,6 +297,7 @@ export default function Dashboard() {
               <button 
                 onClick={() => {
                   localStorage.setItem('mallVerificationSubmitted', 'true');
+                  localStorage.setItem(`spacelo_status_${userEmail}`, 'approved');
                   setIsApproved(true);
                 }}
                 className="w-full bg-[#fe6a34] hover:bg-[#e05620] text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-[14px]"

@@ -8,6 +8,29 @@ export default function CompanyOnboardingStep4() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const email = localStorage.getItem('userEmail') || 'company@spacelo.pk';
+    const name = localStorage.getItem('fullName') || 'Company Manager';
+    const companyName = localStorage.getItem(STORAGE_KEYS.CHAIN_NAME) || 'Dawood Herbal';
+
+    // Push pending approval request to Admin
+    const newApproval = {
+      id: 'u_' + Date.now(),
+      name: name,
+      role: 'Company/Brand',
+      email: email,
+      phone: '+92 321 5556677',
+      businessName: companyName,
+      submittedAt: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      status: 'pending',
+      docs: ['Company Registration', 'Brand Authorization']
+    };
+
+    const currentPending = JSON.parse(localStorage.getItem('spacelo_pending_approvals') || '[]');
+    if (!currentPending.some(p => p.email === newApproval.email)) {
+      localStorage.setItem('spacelo_pending_approvals', JSON.stringify([...currentPending, newApproval]));
+    }
+
     setShowModal(true);
   };
 

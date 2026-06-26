@@ -1,11 +1,21 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    const passedRole = location.state?.role;
+    if (passedRole) {
+      localStorage.setItem('userRole', passedRole);
+    }
+  }, [location.state]);
 
   const handleLogin = (e) => {
     e.preventDefault();
+    localStorage.setItem('userEmail', email || 'ahmed@superstore.pk'); // save email, fallback to default
     const role = localStorage.getItem('userRole') || 'Shopkeeper';
     const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
 
@@ -45,7 +55,15 @@ export default function Login() {
               <label className="text-[14px] font-semibold text-[#6e7975]" htmlFor="email">Email</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6e7975] text-[20px]">mail</span>
-                <input className="w-full pl-10 pr-4 py-3 bg-[#f1f4f1] border border-[#bec9c4] rounded-lg focus:ring-2 focus:ring-[#005344] focus:border-[#005344] transition-all outline-none" id="email" placeholder="name@company.com" type="email" />
+                <input 
+                  className="w-full pl-10 pr-4 py-3 bg-[#f1f4f1] border border-[#bec9c4] rounded-lg focus:ring-2 focus:ring-[#005344] focus:border-[#005344] transition-all outline-none" 
+                  id="email" 
+                  placeholder="name@company.com" 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
             </div>
 
