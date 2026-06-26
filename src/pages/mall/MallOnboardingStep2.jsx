@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { STORAGE_KEYS } from '../../lib/constants';
 
 export default function MallOnboardingStep2() {
   const navigate = useNavigate();
+  const [storeName, setStoreName] = useState('');
+  const [branchName, setBranchName] = useState('');
+
+  const handleNext = () => {
+    localStorage.setItem(STORAGE_KEYS.CHAIN_NAME, storeName || 'Imtiaz Supermarket');
+    localStorage.setItem(STORAGE_KEYS.BRANCH_AREA, branchName || 'Johar Town Branch');
+    navigate('/onboarding/mall/step3');
+  };
 
   return (
     <div className="bg-[#f7faf7] min-h-full flex flex-col font-manrope">
@@ -17,7 +26,7 @@ export default function MallOnboardingStep2() {
             <h1 className="text-[20px] font-bold text-[#005344]">Mall Profile</h1>
           </div>
           <div className="flex items-center">
-            <span className="text-[#3e4945] font-semibold text-[12px]">Step 2 of 4</span>
+            <span className="text-[#3e4945] font-semibold text-[12px]">Step 2 of 3</span>
           </div>
         </div>
       </header>
@@ -49,19 +58,11 @@ export default function MallOnboardingStep2() {
                 <span className="text-[16px]">3</span>
               </div>
             </div>
-            
-            {/* Step 4: Inactive */}
-            <div className="flex flex-col items-center bg-[#f7faf7] px-1">
-              <div className="w-10 h-10 rounded-full bg-[#ebefec] text-[#3e4945] flex items-center justify-center border-2 border-[#bec9c4]">
-                <span className="text-[16px]">4</span>
-              </div>
-            </div>
           </div>
           <div className="flex justify-between items-center mt-2 px-2">
              <span className="text-[10px] font-bold text-[#005344]">Basic</span>
              <span className="text-[10px] font-bold text-[#005344]">Shop</span>
              <span className="text-[10px] text-[#6e7975]">Location</span>
-             <span className="text-[10px] text-[#6e7975]">Verify</span>
           </div>
         </section>
 
@@ -70,12 +71,18 @@ export default function MallOnboardingStep2() {
           <p className="text-[14px] text-[#3e4945]">Complete your business identity to proceed.</p>
         </div>
 
-        <form className="bg-white p-5 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-[#e0e3e0] space-y-5">
+        <div className="bg-white p-5 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-[#e0e3e0] space-y-5">
           
           {/* Business / Store Name */}
           <div className="space-y-1.5">
             <label className="text-[14px] font-semibold text-[#181c1b]">Business / Store Name</label>
-            <input className="w-full h-12 px-4 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="e.g., Al-Fatah Hypermarket" type="text" />
+            <input 
+              className="w-full h-12 px-4 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" 
+              placeholder="e.g., Al-Fatah Hypermarket" 
+              type="text" 
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+            />
           </div>
 
           {/* Business Type Dropdown */}
@@ -83,10 +90,10 @@ export default function MallOnboardingStep2() {
             <label className="text-[14px] font-semibold text-[#181c1b]">Business Type</label>
             <div className="relative">
               <select className="w-full h-12 px-4 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg focus:ring-2 focus:ring-[#005344] outline-none text-[16px] appearance-none cursor-pointer">
-                <option value="" disabled selected>Select retail format</option>
+                <option value="" disabled>Select retail format</option>
                 <option>Supermarket/Hypermarket</option>
                 <option>Large Departmental Store</option>
-                <option>Retail Chain</option>
+                <option value="Retail Chain" selected>Retail Chain</option>
                 <option>Mini Mall/Plaza</option>
                 <option>Other Large Format Retail</option>
               </select>
@@ -100,7 +107,13 @@ export default function MallOnboardingStep2() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[14px] font-semibold text-[#181c1b]">Branch Name</label>
-              <input className="w-full h-12 px-4 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" placeholder="e.g. Main Branch" type="text" />
+              <input 
+                className="w-full h-12 px-4 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg focus:ring-2 focus:ring-[#005344] outline-none text-[16px]" 
+                placeholder="e.g. Main Branch" 
+                type="text" 
+                value={branchName}
+                onChange={(e) => setBranchName(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <label className="text-[14px] font-semibold text-[#181c1b]">Avg Daily Footfall</label>
@@ -125,7 +138,7 @@ export default function MallOnboardingStep2() {
             </p>
           </div>
 
-        </form>
+        </div>
       </main>
 
       {/* Footer Navigation */}
@@ -136,7 +149,7 @@ export default function MallOnboardingStep2() {
             <span className="text-[14px] font-bold">Back</span>
           </button>
           
-          <button onClick={() => navigate('/onboarding/mall/step3')} className="flex items-center justify-center bg-[#ab3500] text-white rounded-lg px-8 py-3 hover:opacity-90 transition-all shadow-md active:scale-95">
+          <button onClick={handleNext} className="flex items-center justify-center bg-[#ab3500] text-white rounded-lg px-8 py-3 hover:opacity-90 transition-all shadow-md active:scale-95">
             <span className="text-[14px] font-bold mr-1">Next</span>
             <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
           </button>

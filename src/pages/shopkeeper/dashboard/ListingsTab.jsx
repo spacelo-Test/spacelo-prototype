@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useShopkeeper } from './ShopkeeperContext';
+import { STORAGE_KEYS } from '../../../lib/constants';
 
 export default function ListingsTab() {
   const {
@@ -21,6 +22,11 @@ export default function ListingsTab() {
     pushNotification,
     unlistedSpaces
   } = useShopkeeper();
+
+  const userRole = localStorage.getItem(STORAGE_KEYS.USER_ROLE) || 'Shopkeeper';
+  const isMallOwner = userRole === 'Mall Owner';
+  const chainName = localStorage.getItem(STORAGE_KEYS.CHAIN_NAME) || 'Imtiaz Supermarket';
+  const branchArea = localStorage.getItem(STORAGE_KEYS.BRANCH_AREA) || 'Johar Town Branch';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
@@ -240,22 +246,40 @@ export default function ListingsTab() {
                   <div className="flex-grow min-w-0 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1 min-w-0">
+                        <div className="flex items-center gap-1 min-w-0 flex-wrap">
                           <span className="bg-[#f0f3f0] text-[#005344] px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex-shrink-0">
                             {getSpaceTypeLabel(type)}
                           </span>
                           <span className="text-[14px] font-bold text-[#181c1b] truncate">{nickname}</span>
-                          {listing.verified && (
-                            <span className="material-symbols-outlined text-[14px] text-[#00875a] flex-shrink-0 font-bold" title="Verified Space">
-                              verified
+                          {isMallOwner ? (
+                            <span className="bg-[#00875a]/10 text-[#00875a] text-[9px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5 border border-[#00875a]/20 flex-shrink-0">
+                              <span className="material-symbols-outlined text-[10px] font-bold">check</span>
+                              {chainName} Branch — {branchArea}
                             </span>
+                          ) : (
+                            listing.verified && (
+                              <span className="material-symbols-outlined text-[14px] text-[#00875a] flex-shrink-0 font-bold" title="Verified Space">
+                                verified
+                              </span>
+                            )
                           )}
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex-shrink-0 ${getStatusBadgeClass(listing.status)}`}>
                           {listing.status === 'Pending Approval' ? 'Pending' : listing.status}
                         </span>
                       </div>
-                      <div className="text-[11px] text-[#6e7975] mt-1 font-medium truncate">{listing.durationLabel}</div>
+                      <div className="text-[11px] text-[#6e7975] mt-1 font-medium truncate flex items-center gap-1.5">
+                        {isMallOwner && (
+                          <div className="flex items-center gap-1 text-[11px] font-semibold text-[#005344] flex-shrink-0">
+                            <span className="w-3.5 h-3.5 rounded-full bg-[#005344] text-[#96ebd5] flex items-center justify-center font-bold text-[8px] uppercase">
+                              {chainName[0]}
+                            </span>
+                            <span>{chainName}</span>
+                            <span className="text-gray-300">•</span>
+                          </div>
+                        )}
+                        <span>{listing.durationLabel}</span>
+                      </div>
                     </div>
 
                     <div className="flex items-end justify-between mt-2">

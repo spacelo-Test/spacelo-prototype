@@ -17,7 +17,7 @@ export default function MallOnboardingStep1() {
             <h1 className="text-[20px] font-bold text-[#005344]">Mall Profile</h1>
           </div>
           <div className="flex items-center">
-            <span className="text-[#3e4945] font-semibold text-[12px]">Step 1 of 4</span>
+            <span className="text-[#3e4945] font-semibold text-[12px]">Step 1 of 3</span>
           </div>
         </div>
       </header>
@@ -49,19 +49,11 @@ export default function MallOnboardingStep1() {
                 <span className="text-[16px]">3</span>
               </div>
             </div>
-            
-            {/* Step 4: Inactive */}
-            <div className="flex flex-col items-center bg-[#f7faf7] px-1">
-              <div className="w-10 h-10 rounded-full bg-[#ebefec] text-[#3e4945] flex items-center justify-center border-2 border-[#bec9c4]">
-                <span className="text-[16px]">4</span>
-              </div>
-            </div>
           </div>
           <div className="flex justify-between items-center mt-2 px-2">
              <span className="text-[10px] font-bold text-[#005344]">Basic</span>
              <span className="text-[10px] text-[#6e7975]">Shop</span>
              <span className="text-[10px] text-[#6e7975]">Location</span>
-             <span className="text-[10px] text-[#6e7975]">Verify</span>
           </div>
         </section>
 

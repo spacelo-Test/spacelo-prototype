@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useShopkeeper } from "./ShopkeeperContext";
+import { STORAGE_KEYS } from "../../../lib/constants";
 
 export default function InventoryTab() {
   const {
@@ -17,6 +18,10 @@ export default function InventoryTab() {
     navigateToView,
     pushNotification,
   } = useShopkeeper();
+
+  const userRole = localStorage.getItem(STORAGE_KEYS.USER_ROLE) || 'Shopkeeper';
+  const isMallOwner = userRole === 'Mall Owner';
+  const chainName = localStorage.getItem(STORAGE_KEYS.CHAIN_NAME) || 'Imtiaz Supermarket';
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
@@ -238,9 +243,16 @@ export default function InventoryTab() {
                   <div className="flex-grow min-w-0 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <span className="bg-[#f0f3f0] text-[#005344] px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
-                          {getSpaceTypeLabel(space.type)}
-                        </span>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="bg-[#f0f3f0] text-[#005344] px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex-shrink-0">
+                            {getSpaceTypeLabel(space.type)}
+                          </span>
+                          {isMallOwner && (
+                            <span className="bg-[#fe6a34]/10 text-[#fe6a34] border border-[#fe6a34]/20 px-1.5 py-0.5 rounded text-[9px] font-bold truncate">
+                              {chainName} Branch
+                            </span>
+                          )}
+                        </div>
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadgeClass(space.status)}`}
                         >

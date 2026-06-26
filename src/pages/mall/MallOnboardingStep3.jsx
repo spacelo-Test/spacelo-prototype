@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { STORAGE_KEYS } from '../../lib/constants';
 
 export default function MallOnboardingStep3() {
   const navigate = useNavigate();
@@ -7,7 +8,8 @@ export default function MallOnboardingStep3() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    localStorage.setItem('onboardingCompleted', 'true');
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
+    localStorage.setItem(STORAGE_KEYS.USER_ROLE, 'Mall Owner');
     setShowModal(true);
   };
 
@@ -22,6 +24,9 @@ export default function MallOnboardingStep3() {
               arrow_back
             </button>
             <h1 className="text-[20px] font-bold text-[#005344]">Mall Profile</h1>
+          </div>
+          <div className="flex items-center">
+            <span className="text-[#3e4945] font-semibold text-[12px]">Step 3 of 3</span>
           </div>
         </div>
       </header>
@@ -123,7 +128,7 @@ export default function MallOnboardingStep3() {
           </button>
           
           <button type="submit" form="mall-onboarding-step3" className="flex items-center justify-center bg-[#ab3500] text-white rounded-lg px-8 py-3 hover:opacity-90 transition-all shadow-md active:scale-95">
-            <span className="text-[14px] font-bold mr-1">Submit Application</span>
+            <span className="text-[14px] font-bold mr-2">Submit</span>
             <span className="material-symbols-outlined text-[20px]">check_circle</span>
           </button>
         </div>
@@ -139,9 +144,9 @@ export default function MallOnboardingStep3() {
               <span className="material-symbols-outlined text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             </div>
             
-            <h2 className="text-[22px] font-bold text-[#181c1b] mb-2">Awaiting Admin Approval</h2>
+            <h2 className="text-[22px] font-bold text-[#181c1b] mb-2">Profile Created!</h2>
             <p className="text-[14px] text-[#3e4945] mb-6">
-              Your Mall Owner application has been submitted securely and is pending admin approval.
+              Your profile has been created successfully. Proceed to the dashboard to submit your chain verification documents.
             </p>
             
             <div className="w-full space-y-3">

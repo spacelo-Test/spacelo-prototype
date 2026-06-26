@@ -1,5 +1,6 @@
 import React from 'react';
 import { useShopkeeper } from './ShopkeeperContext';
+import { STORAGE_KEYS } from '../../../lib/constants';
 
 export default function HomeTab() {
   const {
@@ -10,6 +11,11 @@ export default function HomeTab() {
     disputes,
     navigateToView,
   } = useShopkeeper();
+
+  const userRole = localStorage.getItem(STORAGE_KEYS.USER_ROLE) || 'Shopkeeper';
+  const isMallOwner = userRole === 'Mall Owner';
+  const chainName = localStorage.getItem(STORAGE_KEYS.CHAIN_NAME) || 'Imtiaz Supermarket';
+  const branchArea = localStorage.getItem(STORAGE_KEYS.BRANCH_AREA) || 'Johar Town Branch';
 
   const getStatusBadge = (status) => {
     const maps = {
@@ -137,7 +143,9 @@ export default function HomeTab() {
       {/* ── Greeting ────────────────────────────────────────────────────────── */}
       <div className="pt-1">
         <p className="text-[12px] font-bold text-[#6e7975] uppercase tracking-widest">Welcome back,</p>
-        <h1 className="text-[26px] font-black text-[#005344] leading-tight mt-0.5">Super Store</h1>
+        <h1 className="text-[26px] font-black text-[#005344] leading-tight mt-0.5">
+          {isMallOwner ? `${chainName} — ${branchArea}` : 'Super Store'}
+        </h1>
       </div>
 
       {/* ── KPI scrollable row ──────────────────────────────────────────────── */}
