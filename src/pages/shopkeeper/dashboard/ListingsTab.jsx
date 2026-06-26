@@ -671,6 +671,8 @@ export default function ListingsTab() {
   }
 
   // VIEW 3: Listing Detail view
+  const bookingsSectionRef = React.useRef(null);
+
   if (currentView === 'listing-detail') {
     const listing = listings.find(l => l.id === viewParams);
 
@@ -686,7 +688,14 @@ export default function ListingsTab() {
     const space = spaces.find(s => s.id === listing.spaceId);
     const relatedRequests = requests.filter(r => r.listingId === listing.id);
 
+    const activeBookings = relatedRequests.filter(
+      r => r.status !== 'Completed' && r.status !== 'Rejected' && r.status !== 'Cancelled'
+    );
+    const completedBookings = relatedRequests.filter(r => r.status === 'Completed');
+    const hasActiveBookings = relatedRequests.some(r => r.status === 'Accepted');
+
     const handleRemoveListing = () => {
+      if (hasActiveBookings) return;
       // Set space status back to Unlisted
       setSpaces(prev => prev.map(s => s.id === listing.spaceId ? { ...s, status: 'Unlisted', listingId: null } : s));
       // Remove listing
@@ -700,6 +709,10 @@ export default function ListingsTab() {
       setCurrentView('main');
     };
 
+    const totalFee = parseInt(listing.totalPrice) || 0;
+    const commissionFee = Math.round(totalFee * 0.15);
+    const netPayoutFee = totalFee - commissionFee;
+
     return (
       <div className="flex-grow flex flex-col relative h-full overflow-hidden bg-[#f7faf7]">
         {/* Detail Header */}
@@ -707,7 +720,7 @@ export default function ListingsTab() {
           <button onClick={() => setCurrentView('main')} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#005344]">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
-          <h1 className="text-[16px] font-black text-[#181c1b] text-center flex-grow">Listing Detail</h1>
+          <h1 className="text-[16px] font-black text-[#181c1b] text-center flex-grow">Listing Details</h1>
           <div className="w-8 h-8"></div>
         </div>
 
@@ -733,99 +746,216 @@ export default function ListingsTab() {
               </span>
               {listing.verified && (
                 <span className="bg-[#00875a]/10 text-[#00875a] border border-[#00875a]/20 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-0.5">
-                  <span className="material-symbols-outlined text-[12px]">verified</span> Verified Space
+                  <span className="material-symbols-outlined text-[12px]">verified</span> Verified Listing
                 </span>
               )}
             </div>
             
             <h2 className="text-[18px] font-black text-[#181c1b]">{space?.nickname || 'Unknown Space'}</h2>
             
-            <div className="pt-2 flex justify-between items-baseline border-t border-[#e0e3e0]">
+            <div className="text-[13px] text-[#6e7975] flex items-center gap-1.5 mt-1 font-semibold">
+              <span className="material-symbols-outlined text-[18px] text-[#fe6a34]">calendar_month</span>
+              <span>{listing.startDate} – {listing.endDate}</span>
+            </div>
+          </div>
+
+          {/* Offer Summary Card */}
+          <div className="bg-white p-4 rounded-xl border border-[#e0e3e0] shadow-[0_2px_12px_rgba(0,0,0,0.04)] space-y-3">
+            <h3 className="text-[12px] font-black text-[#005344] uppercase tracking-wider border-b border-[#e0e3e0] pb-2">Offer Summary</h3>
+            <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[13px]">
               <div>
-                <span className="text-[#6e7975] text-[11px] block font-bold uppercase tracking-wider">Listing Total Price</span>
-                <span className="text-[20px] font-black text-[#005344]">PKR {listing.totalPrice.toLocaleString()}</span>
+                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Total Rental Price</span>
+                <span className="font-black text-[16px] text-[#005344]">PKR {totalFee.toLocaleString()}</span>
               </div>
-              <div className="text-right">
-                <span className="text-[#6e7975] text-[11px] block font-bold uppercase tracking-wider">Per Month</span>
-                <span className="text-[14px] font-bold text-[#181c1b]">PKR {listing.pricePerMonth.toLocaleString()} /mo</span>
+              <div>
+                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Per Month (Reference)</span>
+                <span className="font-bold text-[14px] text-[#181c1b]">PKR {listing.pricePerMonth.toLocaleString()} /mo</span>
+              </div>
+              <div>
+                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Platform Commission (15%)</span>
+                <span className="font-semibold text-gray-500 text-[13px]">PKR {commissionFee.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Est. Net Payout</span>
+                <span className="font-bold text-[#005344] text-[13px]">PKR {netPayoutFee.toLocaleString()}</span>
+              </div>
+              <div className="col-span-2 border-t border-[#e0e3e0] pt-2">
+                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Listing Duration Offer</span>
+                <span className="font-bold text-[#181c1b]">{listing.durationLabel}</span>
               </div>
             </div>
           </div>
 
-          {/* Listing specific details */}
+          {/* Space Reference Card (Read-only) */}
           <div className="bg-white p-4 rounded-xl border border-[#e0e3e0] shadow-[0_2px_12px_rgba(0,0,0,0.04)] space-y-3">
-            <h3 className="text-[12px] font-black text-[#005344] uppercase tracking-wider">Offer Summary</h3>
-            <div className="grid grid-cols-2 gap-3 text-[13px]">
+            <div className="flex justify-between items-center border-b border-[#e0e3e0] pb-2">
+              <h3 className="text-[12px] font-black text-[#005344] uppercase tracking-wider">Space Reference (Read-only)</h3>
+              <span className="text-[10px] font-bold text-[#6e7975] bg-gray-100 px-2 py-0.5 rounded">Specs</span>
+            </div>
+            <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[13px]">
               <div>
-                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Duration Offer</span>
-                <span className="font-bold text-[#181c1b]">{listing.durationLabel}</span>
+                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Space Type</span>
+                <span className="font-bold text-[#181c1b]">{getSpaceTypeLabel(space?.type)}</span>
               </div>
               <div>
                 <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Physical Dimensions</span>
                 <span className="font-bold text-[#181c1b]">{space?.dimensions.l}x{space?.dimensions.w}x{space?.dimensions.h} {space?.dimensions.unit}</span>
               </div>
-            </div>
-            <div className="border-t border-[#e0e3e0] pt-2">
-              <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Product Preferences</span>
-              <p className="text-[#181c1b] text-[13px] italic mt-0.5">{listing.productPreference}</p>
-            </div>
-          </div>
-
-          {/* Active bookings count */}
-          <div className="bg-white p-3 rounded-xl border border-[#e0e3e0] shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex justify-between items-center text-[13px]">
-            <span className="font-semibold text-[#181c1b]">Total active bookings:</span>
-            <span className="bg-[#005344] text-white px-2 py-0.5 rounded-full font-black text-[11px]">
-              {listing.bookingsCount} Active
-            </span>
-          </div>
-
-          {/* Related Requests */}
-          {relatedRequests.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-[12px] font-black text-[#005344] uppercase tracking-wider pl-1">Placement Bookings & Requests</h3>
-              <div className="space-y-2">
-                {relatedRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    onClick={() => navigateToView('requests', 'booking-detail', req.id)}
-                    className="p-3 bg-white border border-[#e0e3e0] rounded-xl flex items-center justify-between shadow-sm cursor-pointer hover:border-[#005344]"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-white text-[11px] ${req.logoBg || 'bg-[#005344]'}`}>
-                          {req.logo}
-                        </span>
-                        <span className="font-bold text-[13px] text-[#181c1b]">{req.brand}</span>
-                      </div>
-                      <span className="text-[11px] text-[#6e7975] block mt-0.5">{req.requestedDates}</span>
-                    </div>
-                    <span className="material-symbols-outlined text-[#6e7975] text-[18px]">chevron_right</span>
-                  </div>
-                ))}
+              <div className="col-span-2">
+                <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Location inside Shop</span>
+                <span className="font-bold text-[#181c1b]">Floor {space?.floor} • Aisle {space?.aisle || 'N/A'} • {space?.section}</span>
               </div>
             </div>
-          )}
+          </div>
+
+          {/* Product Preferences */}
+          <div className="bg-white p-4 rounded-xl border border-[#e0e3e0] shadow-[0_2px_12px_rgba(0,0,0,0.04)] space-y-2">
+            <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">Product Preferences</span>
+            <p className="text-[#181c1b] text-[13px] italic font-medium leading-relaxed bg-[#f7faf7] p-3 rounded-lg border border-[#e0e3e0]">
+              {listing.productPreference || "No product preference declared."}
+            </p>
+          </div>
+
+          {/* Bookings Section */}
+          <div ref={bookingsSectionRef} className="space-y-3">
+            <h3 className="text-[12px] font-black text-[#005344] uppercase tracking-wider pl-1">Bookings for this Listing</h3>
+
+            {/* Active Bookings Group */}
+            <div className="space-y-2">
+              <div className="text-[11px] font-bold text-[#6e7975] uppercase tracking-wider pl-1 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                Active Requests & Bookings ({activeBookings.length})
+              </div>
+              {activeBookings.length > 0 ? (
+                <div className="space-y-2">
+                  {activeBookings.map((req) => (
+                    <div
+                      key={req.id}
+                      onClick={() => {
+                        if (req.status === 'Accepted') {
+                          navigateToView('requests', 'booking-detail', req.id);
+                        } else {
+                          navigateToView('requests', 'detail', req.id);
+                        }
+                      }}
+                      className="p-3 bg-white border border-[#e0e3e0] rounded-xl flex items-center justify-between shadow-sm cursor-pointer hover:border-[#005344] transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-white text-[12px] ${req.logoBg || 'bg-[#005344]'}`}>
+                          {req.logo}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-[13px] text-[#181c1b]">{req.brand}</span>
+                            {req.verified && <span className="material-symbols-outlined text-[14px] text-blue-500">verified</span>}
+                          </div>
+                          <span className="text-[11px] text-[#6e7975] block mt-0.5">{req.requestedDates}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                          req.status === 'Accepted' ? 'bg-[#00875a]/10 text-[#00875a]' :
+                          req.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {req.status}
+                        </span>
+                        <span className="material-symbols-outlined text-[#6e7975] text-[18px]">chevron_right</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[12px] text-[#6e7975] bg-white border border-[#e0e3e0] p-4 rounded-xl text-center shadow-sm">
+                  No active bookings yet.
+                </div>
+              )}
+            </div>
+
+            {/* Completed Bookings Group */}
+            <div className="space-y-2">
+              <div className="text-[11px] font-bold text-[#6e7975] uppercase tracking-wider pl-1 flex items-center gap-1 mt-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                Completed Bookings ({completedBookings.length})
+              </div>
+              {completedBookings.length > 0 ? (
+                <div className="space-y-2">
+                  {completedBookings.map((req) => (
+                    <div
+                      key={req.id}
+                      onClick={() => navigateToView('requests', 'booking-detail', req.id)}
+                      className="p-3 bg-white border border-[#e0e3e0] rounded-xl flex items-center justify-between shadow-sm cursor-pointer hover:border-[#005344] transition-all opacity-80"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-white text-[12px] bg-gray-400`}>
+                          {req.logo}
+                        </span>
+                        <div>
+                          <span className="font-bold text-[13px] text-[#181c1b]">{req.brand}</span>
+                          <span className="text-[11px] text-[#6e7975] block mt-0.5">{req.requestedDates}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-gray-100 text-gray-500">
+                          Completed
+                        </span>
+                        <span className="material-symbols-outlined text-[#6e7975] text-[18px]">chevron_right</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[12px] text-[#6e7975] bg-white border border-[#e0e3e0] p-4 rounded-xl text-center shadow-sm">
+                  No completed bookings.
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Actions */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="space-y-3 pt-2">
             <button
               onClick={() => {
                 resetListingForm();
                 setCurrentView('create-listing');
                 setViewParams(listing.id);
               }}
-              className="py-3 border border-[#005344] text-[#005344] rounded-xl text-[13px] font-black hover:bg-[#005344]/5 transition-all text-center flex items-center justify-center gap-1.5 bg-white"
+              className="w-full py-3 bg-[#005344] text-white rounded-xl text-[13px] font-black hover:bg-[#003d32] transition-all text-center flex items-center justify-center gap-1.5 shadow-sm"
             >
               <span className="material-symbols-outlined text-[16px]">edit</span>
               Edit Listing
             </button>
-            <button
-              onClick={handleRemoveListing}
-              className="py-3 border border-[#de350b] text-[#de350b] hover:bg-[#de350b]/5 rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 bg-white"
-            >
-              <span className="material-symbols-outlined text-[16px]">delete</span>
-              Remove Offer
-            </button>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  bookingsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                disabled={relatedRequests.length === 0}
+                className={`py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 bg-white ${
+                  relatedRequests.length === 0
+                    ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                    : 'border-[#005344] text-[#005344] hover:bg-[#005344]/5'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">visibility</span>
+                View Bookings
+              </button>
+
+              <button
+                onClick={handleRemoveListing}
+                disabled={hasActiveBookings}
+                className={`py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 bg-white ${
+                  hasActiveBookings
+                    ? 'border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50'
+                    : 'border-[#de350b] text-[#de350b] hover:bg-[#de350b]/5'
+                }`}
+                title={hasActiveBookings ? 'Cannot remove listing with active bookings' : ''}
+              >
+                <span className="material-symbols-outlined text-[16px]">delete</span>
+                Remove Offer
+              </button>
+            </div>
           </div>
         </div>
       </div>

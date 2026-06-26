@@ -1049,6 +1049,19 @@ export default function InventoryTab() {
       setCurrentView("main");
     };
 
+    const handleDeleteSpace = () => {
+      if (space.status === "Listed") return;
+      setSpaces((prev) => prev.filter((s) => s.id !== space.id));
+      pushNotification(
+        "admin",
+        "Space Deleted",
+        `"${space.nickname}" has been deleted from your inventory.`,
+        { tab: "inventory", view: "main" }
+      );
+      setCurrentView("main");
+      setViewParams(null);
+    };
+
     return (
       <div className="flex-grow flex flex-col relative h-full overflow-hidden bg-[#f7faf7]">
         {/* Detail Header */}
@@ -1165,100 +1178,71 @@ export default function InventoryTab() {
             )}
           </div>
 
-          {/* Listing Link Status Card */}
-          <div className="bg-white p-4 rounded-xl border border-[#e0e3e0] shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-            {space.status === "Listed" ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-[#00875a]">
-                  <span className="material-symbols-outlined text-[20px]">
-                    check_circle
-                  </span>
-                  <span className="text-[13px] font-black">
-                    This space is currently Listed
-                  </span>
-                </div>
-                <p className="text-[12px] text-[#6e7975]">
-                  It has an active commercial listing and can be booked by
-                  brands.
-                </p>
-                <button
-                  onClick={() =>
-                    navigateToView(
-                      "listings",
-                      "listing-detail",
-                      space.listingId,
-                    )
-                  }
-                  className="w-full bg-[#005344] text-white py-2.5 rounded-xl text-[13px] font-bold hover:bg-[#003d32] transition-all"
-                >
-                  View Active Listing
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-gray-500">
-                  <span className="material-symbols-outlined text-[20px]">
-                    info
-                  </span>
-                  <span className="text-[13px] font-black">
-                    This space has no active listing
-                  </span>
-                </div>
-                <p className="text-[12px] text-[#6e7975]">
-                  To earn money, create a commercial listing to make this space
-                  visible to brands.
-                </p>
-                <button
-                  onClick={() => {
-                    resetListingForm();
-                    setNewListingData((prev) => ({
-                      ...prev,
-                      spaceId: space.id,
-                    }));
-                    navigateToView("listings", "create-listing");
-                  }}
-                  className="w-full bg-[#fe6a34] text-white py-2.5 rounded-xl text-[13px] font-bold hover:bg-[#e45a27] transition-all"
-                >
-                  Create Listing for This Space
-                </button>
-              </div>
-            )}
+          {/* Helper Banner advising listing tab management */}
+          <div className="bg-[#f0f3f0] border border-[#e0e3e0] rounded-xl p-3.5 text-[12px] text-[#6e7975] font-semibold flex gap-2.5 mt-2">
+            <span className="material-symbols-outlined text-[18px] text-[#005344] flex-shrink-0">info</span>
+            <span>💡 Manage listings from the Listings tab and requests from the Requests tab</span>
           </div>
 
           {/* Action Row */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="space-y-3 pt-2">
             <button
               onClick={() => {
                 resetSpaceForm();
                 setCurrentView("add-space");
                 setViewParams(space.id);
               }}
-              className="py-3 border border-[#005344] text-[#005344] rounded-xl text-[13px] font-black hover:bg-[#005344]/5 transition-all text-center flex items-center justify-center gap-1.5 bg-white"
+              className="w-full py-3 bg-[#005344] text-white rounded-xl text-[13px] font-black hover:bg-[#003d32] transition-all text-center flex items-center justify-center gap-1.5 shadow-sm"
             >
               <span className="material-symbols-outlined text-[16px]">
                 edit
               </span>
               Edit Space
             </button>
-            <button
-              onClick={handleDeactivate}
-              disabled={space.status === "Listed"}
-              className={`py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 ${
-                space.status === "Listed"
-                  ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
-                  : "border-[#de350b] text-[#de350b] hover:bg-[#de350b]/5 bg-white"
-              }`}
-              title={
-                space.status === "Listed"
-                  ? "Cannot deactivate listed space"
-                  : ""
-              }
-            >
-              <span className="material-symbols-outlined text-[16px]">
-                block
-              </span>
-              Deactivate
-            </button>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={handleDeactivate}
+                disabled={space.status === "Inactive" || space.status === "Listed"}
+                className={`py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 ${
+                  space.status === "Inactive" || space.status === "Listed"
+                    ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
+                    : "border-[#de350b] text-[#de350b] hover:bg-[#de350b]/5 bg-white"
+                }`}
+                title={
+                  space.status === "Listed"
+                    ? "Cannot deactivate listed space"
+                    : space.status === "Inactive"
+                    ? "Space is already inactive"
+                    : ""
+                }
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  block
+                </span>
+                Deactivate
+              </button>
+
+              <button
+                onClick={handleDeleteSpace}
+                disabled={space.status === "Listed"}
+                className={`py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 ${
+                  space.status === "Listed"
+                    ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
+                    : "border-[#de350b] text-[#de350b] hover:bg-red-50 bg-white"
+                }`}
+                title={
+                  space.status === "Listed"
+                    ? "Cannot delete listed space"
+                    : ""
+                }
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  delete
+                </span>
+                Delete Space
+              </button>
+            </div>
           </div>
         </div>
       </div>
