@@ -359,7 +359,8 @@ export default function ListingsTab() {
                       <div className="flex items-end justify-between mt-2">
                         <div>
                           <span className="text-[15px] font-black text-[#005344]">
-                            PKR {(Number(listing.totalPrice) || 0).toLocaleString()}
+                            PKR{" "}
+                            {(Number(listing.totalPrice) || 0).toLocaleString()}
                           </span>
                           <span className="text-[10px] text-[#6e7975] ml-1">
                             /total
@@ -897,8 +898,11 @@ export default function ListingsTab() {
                       <span className="text-[#6e7975] block text-[10px] font-semibold uppercase tracking-wider">
                         Total Rental Fee
                       </span>
-                      <span className="font-bold text-[#181c1b] text-[#005344]">
-                        PKR {(Number(newListingData.totalPrice) || 0).toLocaleString()}
+                      <span className="font-bold text-[#181c1b]">
+                        PKR{" "}
+                        {(
+                          Number(newListingData.totalPrice) || 0
+                        ).toLocaleString()}
                       </span>
                     </div>
                     <div className="col-span-2">
@@ -906,7 +910,11 @@ export default function ListingsTab() {
                         Monthly Payout P/M
                       </span>
                       <span className="font-bold text-[#181c1b]">
-                        PKR {(Number(newListingData.pricePerMonth) || 0).toLocaleString()} /month
+                        PKR{" "}
+                        {(
+                          Number(newListingData.pricePerMonth) || 0
+                        ).toLocaleString()}{" "}
+                        /month
                       </span>
                     </div>
                     <div className="col-span-2 border-t border-[#e0e3e0] pt-2.5">
@@ -1109,7 +1117,8 @@ export default function ListingsTab() {
                   Per Month (Reference)
                 </span>
                 <span className="font-bold text-[14px] text-[#181c1b]">
-                  PKR {(Number(listing.pricePerMonth) || 0).toLocaleString()} /mo
+                  PKR {(Number(listing.pricePerMonth) || 0).toLocaleString()}{" "}
+                  /mo
                 </span>
               </div>
               <div>
