@@ -169,7 +169,7 @@ export default function RequestsTab() {
                   </p>
                   <p className="text-[10px] text-[#6e7975] mt-0.5">{log.date}</p>
                   <div className="bg-[#f7faf7] p-2 rounded-lg border border-[#e0e3e0] mt-1.5 text-[11px] text-[#3e4945] space-y-0.5">
-                    <p>• <strong>Proposed Price</strong>: PKR {log.price.toLocaleString()}</p>
+                    <p>• <strong>Proposed Price</strong>: PKR {(log.newPrice || log.price || 0).toLocaleString()}</p>
                     {log.note && <p>• <strong>Note</strong>: <span className="italic">"{log.note}"</span></p>}
                   </div>
                 </div>
@@ -182,7 +182,7 @@ export default function RequestsTab() {
             <div className="bg-white border border-[#e0e3e0] p-4 rounded-xl shadow-sm space-y-3">
               <div className="bg-[#fe6a34]/10 p-3 rounded-lg border border-[#fe6a34]/20 text-xs text-[#b25000] space-y-1">
                 <p className="font-black">Shopkeeper Proposal Summary:</p>
-                <p>• **Rent**: PKR {selectedRequest.counterHistory[selectedRequest.counterHistory.length - 1].price.toLocaleString()} Total</p>
+                <p>• <strong>Rent</strong>: PKR {(selectedRequest.counterHistory[selectedRequest.counterHistory.length - 1].newPrice || selectedRequest.counterHistory[selectedRequest.counterHistory.length - 1].price || 0).toLocaleString()} Total</p>
                 <p className="italic">"{selectedRequest.counterHistory[selectedRequest.counterHistory.length - 1].note}"</p>
               </div>
 
@@ -499,7 +499,7 @@ export default function RequestsTab() {
                   {r.status === 'Countered' && (
                     <div className="bg-blue-50 border border-blue-100 rounded-lg p-2 mt-2.5 text-[10px] text-blue-700 font-bold flex items-center gap-1">
                       <span className="material-symbols-outlined text-[14px]">swap_horiz</span>
-                      <span>Counter-offer received: PKR {r.counterHistory[r.counterHistory.length - 1].price.toLocaleString()}</span>
+                      <span>Counter-offer received: PKR {(r.counterHistory[r.counterHistory.length - 1].newPrice || r.counterHistory[r.counterHistory.length - 1].price || 0).toLocaleString()}</span>
                     </div>
                   )}
 

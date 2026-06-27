@@ -971,12 +971,42 @@ function RequestCard({ req, spaces, onTap }) {
 /* ─── Main Inbox ────────────────────────────────────────────────────────────── */
 function InboxView({ initialTab, spaces, onSelectReq, navigateToView }) {
   const { requests, advanceRequests } = useShopkeeper();
-  const [inboxTab, setInboxTab] = useState(initialTab === 'advance' ? 'advance' : 'regular');
+  const [inboxTab, setInboxTab] = useState(() => {
+    if (initialTab === 'advance') return 'advance';
+    if (initialTab === 'contracts') return 'contracts';
+    if (initialTab === 'history') return 'history';
+    return 'requests';
+  });
   const [statusFilter, setStatusFilter] = useState('All');
-  const statuses = ['All', 'Pending', 'Countered', 'Accepted', 'Rejected'];
 
-  const pool = inboxTab === 'regular' ? requests : advanceRequests;
+  const getPoolAndFilters = () => {
+    let pool = [];
+    let filters = ['All'];
+
+    if (inboxTab === 'requests') {
+      pool = requests.filter(r => r.type !== 'advance' && r.isAdvance !== true && r.status !== 'Completed' && r.status !== 'Rejected' && !(r.status === 'Accepted' && !r.contractSignedByShopkeeper));
+      filters = ['All', 'Pending', 'Countered', 'Accepted'];
+    } else if (inboxTab === 'contracts') {
+      pool = requests.filter(r => r.status === 'Accepted' && !r.contractSignedByShopkeeper && r.type !== 'advance' && r.isAdvance !== true);
+      filters = [];
+    } else if (inboxTab === 'advance') {
+      pool = advanceRequests.filter(r => r.type === 'advance' || r.isAdvance === true);
+      filters = ['All', 'Pending', 'Countered', 'Accepted', 'Rejected'];
+    } else if (inboxTab === 'history') {
+      pool = [...requests, ...advanceRequests].filter(r => r.status === 'Completed' || r.status === 'Rejected');
+      filters = ['All', 'Completed', 'Rejected'];
+    }
+
+    return { pool, filters };
+  };
+
+  const { pool, filters } = getPoolAndFilters();
   const filtered = pool.filter(r => statusFilter === 'All' || r.status === statusFilter);
+
+  const handleTabChange = (key) => {
+    setInboxTab(key);
+    setStatusFilter('All');
+  };
 
   return (
     <div className="p-4 space-y-4 pb-6">
@@ -995,34 +1025,44 @@ function InboxView({ initialTab, spaces, onSelectReq, navigateToView }) {
         </div>
       </div>
 
-      {/* inbox tabs */}
-      <div className="flex border-b border-[#e0e3e0]">
+      {/* inbox tabs (2x2 grid) */}
+      <div className="grid grid-cols-2 gap-2">
         {[
-          { key: 'regular', label: 'Requests', color: '#005344' },
-          { key: 'advance', label: 'Advance Requests', color: '#0d9488' },
+          { key: 'requests', label: 'Requests', color: '#005344', icon: 'inbox' },
+          { key: 'contracts', label: 'Contracts to Sign', color: '#fe6a34', icon: 'draw' },
+          { key: 'advance', label: 'Advance Requests', color: '#0d9488', icon: 'schedule' },
+          { key: 'history', label: 'History', color: '#6e7975', icon: 'history' },
         ].map(t => (
-          <button key={t.key} onClick={() => setInboxTab(t.key)}
-            className="flex-1 pb-3 text-[11px] font-black tracking-wide uppercase transition-all border-b-2"
-            style={{
-              borderBottomColor: inboxTab === t.key ? t.color : 'transparent',
-              color: inboxTab === t.key ? t.color : '#6e7975',
-            }}>
-            {t.label}
+          <button 
+            key={t.key} 
+            onClick={() => handleTabChange(t.key)}
+            className={`p-3 rounded-xl border flex items-center gap-2 transition-all text-left ${
+              inboxTab === t.key 
+                ? 'bg-white border-[#005344] shadow-sm font-black text-[#005344]' 
+                : 'bg-white border-[#e0e3e0] text-[#6e7975] hover:bg-[#fafbfa]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]" style={{ color: inboxTab === t.key ? '#005344' : '#6e7975' }}>
+              {t.icon}
+            </span>
+            <span className="text-[11px] uppercase tracking-wider font-extrabold truncate">{t.label}</span>
           </button>
         ))}
       </div>
 
       {/* status filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {statuses.map(s => (
-          <button key={s} onClick={() => setStatusFilter(s)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black border transition-all ${
-              statusFilter === s
-                ? 'bg-[#005344] text-white border-[#005344]'
-                : 'bg-white text-[#6e7975] border-[#e0e3e0] hover:border-[#005344]/40'
-            }`}>{s}</button>
-        ))}
-      </div>
+      {filters.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {filters.map(s => (
+            <button key={s} onClick={() => setStatusFilter(s)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black border transition-all ${
+                statusFilter === s
+                  ? 'bg-[#005344] text-white border-[#005344]'
+                  : 'bg-white text-[#6e7975] border-[#e0e3e0] hover:border-[#005344]/40'
+              }`}>{s}</button>
+          ))}
+        </div>
+      )}
 
       {/* list */}
       <div className="space-y-3">
@@ -1030,13 +1070,23 @@ function InboxView({ initialTab, spaces, onSelectReq, navigateToView }) {
           <div className="text-center py-10 bg-white border border-[#e0e3e0] rounded-2xl space-y-2">
             <span className="material-symbols-outlined text-[40px] text-[#bec9c4]">inbox</span>
             <p className="text-xs text-[#6e7975] font-bold">
-              No {inboxTab === 'advance' ? 'advance ' : ''}requests{statusFilter !== 'All' ? ` with status "${statusFilter}"` : ''}
+              No requests found.
             </p>
           </div>
         ) : (
-          filtered.map(req => (
-            <RequestCard key={req.id} req={req} spaces={spaces} onTap={() => onSelectReq(req.id)} />
-          ))
+          filtered.map(req => {
+            const isBooking = req.status === 'Accepted' || req.status === 'Completed';
+            const handleTap = () => {
+              if (isBooking) {
+                navigateToView('requests', 'booking-detail', req.id);
+              } else {
+                onSelectReq(req.id);
+              }
+            };
+            return (
+              <RequestCard key={req.id} req={req} spaces={spaces} onTap={handleTap} />
+            );
+          })
         )}
       </div>
     </div>
@@ -1055,7 +1105,7 @@ export default function RequestsTab() {
   const setBooking  = (id) => { setCurrentView('booking-detail'); setViewParams(id); };
   const setContract = (id) => { setCurrentView('contract');      setViewParams(id); };
   const setProof    = (id) => { setCurrentView('proof-upload');  setViewParams(id); };
-  const setCounter  = (id) => { setCurrentView('counter-offer'); setViewParams(id); };
+  const setDetailCounter = (id) => { setCurrentView('counter-offer'); setViewParams(id); };
 
   if (currentView === 'calendar') {
     return <CalendarView onBack={() => setCurrentView('main')} />;
@@ -1101,16 +1151,16 @@ export default function RequestsTab() {
       <RequestDetailView
         reqId={currentId}
         onBack={() => setCurrentView('main')}
-        onCounter={() => setCounter(currentId)}
+        onCounter={() => setDetailCounter(currentId)}
         onBooking={() => setBooking(currentId)}
       />
     );
   }
 
-  // main / advance
+  // main / advance / contracts / history
   return (
     <InboxView
-      initialTab={currentView === 'advance' ? 'advance' : 'regular'}
+      initialTab={currentView === 'advance' ? 'advance' : (viewParams || 'regular')}
       spaces={spaces}
       onSelectReq={setDetail}
       navigateToView={navigateToView}

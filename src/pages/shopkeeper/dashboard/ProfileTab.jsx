@@ -63,6 +63,16 @@ export default function ProfileTab({ handleLogout }) {
             <span className="material-symbols-outlined text-gray-400">chevron_right</span>
           </div>
 
+          {isMallOwner && (
+            <div 
+              onClick={() => setCurrentView('branch-details')}
+              className="p-4 flex justify-between items-center cursor-pointer hover:bg-[#ebefec] text-xs transition-colors"
+            >
+              <span className="flex items-center gap-2 font-bold text-[#3e4945]"><span className="material-symbols-outlined text-[20px]">store</span> Branch Details</span>
+              <span className="material-symbols-outlined text-gray-400">chevron_right</span>
+            </div>
+          )}
+
           <div 
             onClick={() => setCurrentView('settings')}
             className="p-4 flex justify-between items-center cursor-pointer hover:bg-[#ebefec] text-xs transition-colors"
@@ -79,95 +89,6 @@ export default function ProfileTab({ handleLogout }) {
             <span className="material-symbols-outlined text-gray-400">chevron_right</span>
           </div>
         </div>
-
-        {isMallOwner && (
-          <div className="space-y-6">
-            {/* Branch Details Section */}
-            <div className="bg-white border border-[#e0e3e0] rounded-xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#005344] border-b border-[#ebefec] pb-2 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">store</span>
-                Branch Details (Editable)
-              </h3>
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Branch Name</label>
-                    <input 
-                      type="text" 
-                      value={bName}
-                      onChange={(e) => setBName(e.target.value)}
-                      className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344]"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Floor Count</label>
-                    <input 
-                      type="text" 
-                      value={fCount}
-                      onChange={(e) => setFCount(e.target.value)}
-                      className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344]"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Branch Address</label>
-                  <textarea 
-                    rows={2}
-                    value={bAddress}
-                    onChange={(e) => setBAddress(e.target.value)}
-                    className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344] resize-none"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Contact Person</label>
-                    <input 
-                      type="text" 
-                      value={cPerson}
-                      onChange={(e) => setCPerson(e.target.value)}
-                      className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344]"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Contact Number</label>
-                    <input 
-                      type="text" 
-                      value={cNumber}
-                      onChange={(e) => setCNumber(e.target.value)}
-                      className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344]"
-                    />
-                  </div>
-                </div>
-                <button 
-                  onClick={() => alert("Branch details saved successfully!")}
-                  className="w-full py-2.5 bg-[#005344] text-white rounded-lg text-xs font-bold shadow-sm hover:opacity-90 transition-all mt-1"
-                >
-                  Save Branch Details
-                </button>
-              </div>
-            </div>
-
-            {/* Chain Info Section */}
-            <div className="bg-white border border-[#e0e3e0] rounded-xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-3">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#6e7975] border-b border-[#ebefec] pb-2 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">verified_user</span>
-                Verified Chain Info (Read-Only)
-              </h3>
-              <div className="flex gap-3 items-center">
-                <div className="w-10 h-10 rounded-full bg-[#005344] text-[#96ebd5] flex items-center justify-center font-bold text-sm shrink-0 uppercase">
-                  {chainName[0]}
-                </div>
-                <div className="min-w-0 flex-grow">
-                  <p className="text-xs font-black text-[#181c1b]">{chainName}</p>
-                  <p className="text-[10px] text-[#6e7975] mt-0.5">Corporate Partner Code: SP-IMTZ-2025</p>
-                </div>
-              </div>
-              <div className="bg-[#f7faf7] p-2.5 rounded-lg border border-[#e0e3e0] text-[10px] text-[#6e7975] font-semibold text-center mt-2">
-                This information is verified and managed by Spacelo admin
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -362,6 +283,105 @@ export default function ProfileTab({ handleLogout }) {
           >
             Change Password
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 5. Branch Details View for Mall Owner
+  if (currentView === 'branch-details' && isMallOwner) {
+    return (
+      <div className="p-4 space-y-6 overflow-y-auto pb-28 h-full">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setCurrentView('main')} className="material-symbols-outlined text-[#005344] hover:bg-[#ebefec] p-1 rounded-full shrink-0">
+            arrow_back
+          </button>
+          <h2 className="text-[20px] font-black text-[#005344]">Branch Details</h2>
+        </div>
+
+        {/* Branch Details Section */}
+        <div className="bg-white border border-[#e0e3e0] rounded-xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-4">
+          <h3 className="text-xs font-black uppercase tracking-wider text-[#005344] border-b border-[#ebefec] pb-2 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[18px]">store</span>
+            Branch Details (Editable)
+          </h3>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Branch Name</label>
+                <input 
+                  type="text" 
+                  value={bName}
+                  onChange={(e) => setBName(e.target.value)}
+                  className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344]"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Floor Count</label>
+                <input 
+                  type="text" 
+                  value={fCount}
+                  onChange={(e) => setFCount(e.target.value)}
+                  className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344]"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Branch Address</label>
+              <textarea 
+                rows={2}
+                value={bAddress}
+                onChange={(e) => setBAddress(e.target.value)}
+                className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344] resize-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Contact Person</label>
+                <input 
+                  type="text" 
+                  value={cPerson}
+                  onChange={(e) => setCPerson(e.target.value)}
+                  className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344]"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-[#6e7975] uppercase tracking-wider block">Contact Number</label>
+                <input 
+                  type="text" 
+                  value={cNumber}
+                  onChange={(e) => setCNumber(e.target.value)}
+                  className="w-full bg-[#f1f4f1] border border-[#bec9c4] rounded-lg p-2 text-xs font-bold mt-1 outline-none focus:ring-1 focus:ring-[#005344]"
+                />
+              </div>
+            </div>
+            <button 
+              onClick={() => alert("Branch details saved successfully!")}
+              className="w-full py-2.5 bg-[#005344] text-white rounded-lg text-xs font-bold shadow-sm hover:opacity-90 transition-all mt-1"
+            >
+              Save Branch Details
+            </button>
+          </div>
+        </div>
+
+        {/* Chain Info Section */}
+        <div className="bg-white border border-[#e0e3e0] rounded-xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-3">
+          <h3 className="text-xs font-black uppercase tracking-wider text-[#6e7975] border-b border-[#ebefec] pb-2 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[18px]">verified_user</span>
+            Verified Chain Info (Read-Only)
+          </h3>
+          <div className="flex gap-3 items-center">
+            <div className="w-10 h-10 rounded-full bg-[#005344] text-[#96ebd5] flex items-center justify-center font-bold text-sm shrink-0 uppercase">
+              {chainName[0]}
+            </div>
+            <div className="min-w-0 flex-grow">
+              <p className="text-xs font-black text-[#181c1b]">{chainName}</p>
+              <p className="text-[10px] text-[#6e7975] mt-0.5">Corporate Partner Code: SP-IMTZ-2025</p>
+            </div>
+          </div>
+          <div className="bg-[#f7faf7] p-2.5 rounded-lg border border-[#e0e3e0] text-[10px] text-[#6e7975] font-semibold text-center mt-2">
+            This information is verified and managed by Spacelo admin
+          </div>
         </div>
       </div>
     );

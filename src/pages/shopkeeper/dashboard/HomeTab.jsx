@@ -68,7 +68,7 @@ export default function HomeTab() {
       color: "text-[#005344]",
       bg: "bg-[#005344]/5",
       onClick: () =>
-        navigateToView("requests", "booking-detail", contractsToSign[0].id),
+        navigateToView("requests", "main", "contracts"),
     });
   if (proofsToUpload.length > 0)
     actions.push({

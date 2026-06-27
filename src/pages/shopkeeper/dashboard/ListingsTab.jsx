@@ -75,6 +75,7 @@ export default function ListingsTab() {
       if (listingToEdit) {
         setIsEditing(true);
         setNewListingData({ ...listingToEdit });
+        setNewListingStep(2);
       }
     } else if (currentView === "create-listing") {
       setIsEditing(false);
@@ -499,7 +500,10 @@ export default function ListingsTab() {
     };
 
     const handlePrev = () => {
-      if (newListingStep > 1) {
+      if (isEditing && newListingStep === 2) {
+        setCurrentView("listing-detail");
+        setIsEditing(false);
+      } else if (newListingStep > 1) {
         setNewListingStep(newListingStep - 1);
       } else {
         resetListingForm();
@@ -508,6 +512,12 @@ export default function ListingsTab() {
         setViewParams(null);
       }
     };
+
+    const spacesToShow = spaces.filter(
+      (s) =>
+        s.status === "Unlisted" ||
+        (isEditing && Number(s.id) === Number(newListingData.spaceId)),
+    );
 
     const handleSelectSpace = (spaceId) => {
       setNewListingData((prev) => ({ ...prev, spaceId }));
@@ -615,9 +625,9 @@ export default function ListingsTab() {
                 </p>
               </div>
 
-              {unlistedSpaces.length > 0 ? (
+              {spacesToShow.length > 0 ? (
                 <div className="space-y-3">
-                  {unlistedSpaces.map((space) => {
+                  {spacesToShow.map((space) => {
                     const isSelected = newListingData.spaceId === space.id;
                     const mainPhoto =
                       space.photos && space.photos.length > 0
@@ -1262,54 +1272,7 @@ export default function ListingsTab() {
               )}
             </div>
 
-            {/* Completed Bookings Group */}
-            <div className="space-y-2">
-              <div className="text-[11px] font-bold text-[#6e7975] uppercase tracking-wider pl-1 flex items-center gap-1 mt-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                Completed Bookings ({completedBookings.length})
-              </div>
-              {completedBookings.length > 0 ? (
-                <div className="space-y-2">
-                  {completedBookings.map((req) => (
-                    <div
-                      key={req.id}
-                      onClick={() =>
-                        navigateToView("requests", "booking-detail", req.id)
-                      }
-                      className="p-3 bg-white border border-[#e0e3e0] rounded-xl flex items-center justify-between shadow-sm cursor-pointer hover:border-[#005344] transition-all opacity-80"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-white text-[12px] bg-gray-400`}
-                        >
-                          {req.logo}
-                        </span>
-                        <div>
-                          <span className="font-bold text-[13px] text-[#181c1b]">
-                            {req.brand}
-                          </span>
-                          <span className="text-[11px] text-[#6e7975] block mt-0.5">
-                            {req.requestedDates}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-gray-100 text-gray-500">
-                          Completed
-                        </span>
-                        <span className="material-symbols-outlined text-[#6e7975] text-[18px]">
-                          chevron_right
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-[12px] text-[#6e7975] bg-white border border-[#e0e3e0] p-4 rounded-xl text-center shadow-sm">
-                  No completed bookings.
-                </div>
-              )}
-            </div>
+
           </div>
 
           {/* Actions */}
@@ -1346,7 +1309,13 @@ export default function ListingsTab() {
                 setCurrentView("create-listing");
                 setViewParams(listing.id);
               }}
-              className="w-full py-3 bg-[#005344] text-white rounded-xl text-[13px] font-black hover:bg-[#003d32] transition-all text-center flex items-center justify-center gap-1.5 shadow-sm"
+              disabled={listing.status === "Live"}
+              className={`w-full py-3 rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 shadow-sm ${
+                listing.status === "Live"
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-[#005344] text-white hover:bg-[#003d32]"
+              }`}
+              title={listing.status === "Live" ? "Live listings cannot be edited" : ""}
             >
               <span className="material-symbols-outlined text-[16px]">
                 edit
@@ -1354,46 +1323,25 @@ export default function ListingsTab() {
               Edit Listing
             </button>
 
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => {
-                  bookingsSectionRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                  });
-                }}
-                disabled={relatedRequests.length === 0}
-                className={`py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 bg-white ${
-                  relatedRequests.length === 0
-                    ? "border-gray-200 text-gray-300 cursor-not-allowed"
-                    : "border-[#005344] text-[#005344] hover:bg-[#005344]/5"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  visibility
-                </span>
-                View Bookings
-              </button>
-
-              <button
-                onClick={handleRemoveListing}
-                disabled={hasActiveBookings}
-                className={`py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 bg-white ${
-                  hasActiveBookings
-                    ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
-                    : "border-[#de350b] text-[#de350b] hover:bg-[#de350b]/5"
-                }`}
-                title={
-                  hasActiveBookings
-                    ? "Cannot remove listing with active bookings"
-                    : ""
-                }
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  delete
-                </span>
-                Remove Offer
-              </button>
-            </div>
+            <button
+              onClick={handleRemoveListing}
+              disabled={hasActiveBookings}
+              className={`w-full py-3 border rounded-xl text-[13px] font-black transition-all text-center flex items-center justify-center gap-1.5 bg-white ${
+                hasActiveBookings
+                  ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
+                  : "border-[#de350b] text-[#de350b] hover:bg-[#de350b]/5"
+              }`}
+              title={
+                hasActiveBookings
+                  ? "Cannot remove listing with active bookings"
+                  : ""
+              }
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                delete
+              </span>
+              Remove Offer
+            </button>
           </div>
         </div>
       </div>

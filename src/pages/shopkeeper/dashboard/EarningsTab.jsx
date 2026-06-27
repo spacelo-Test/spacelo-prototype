@@ -25,12 +25,6 @@ export default function EarningsTab() {
       <div className="p-4 space-y-6">
         <div className="flex justify-between items-center px-1">
           <h2 className="text-[22px] font-black text-[#005344]">Earnings & Payments</h2>
-          <button 
-            onClick={() => setCurrentView('payout-settings')}
-            className="text-xs font-bold text-[#005344] hover:underline flex items-center gap-0.5"
-          >
-            <span className="material-symbols-outlined text-[16px]">credit_card</span> Payouts
-          </button>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -63,31 +57,27 @@ export default function EarningsTab() {
           </button>
         </div>
 
-        <div className="space-y-3">
-          <h3 className="text-[12px] font-bold uppercase tracking-wider text-[#6e7975] px-1">Transactions history</h3>
-          <div className="bg-white border border-[#e0e3e0] rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
-            <div className="divide-y divide-[#ebefec]">
-              <div className="p-3.5 flex justify-between items-center text-xs">
-                <div>
-                  <p className="font-black text-[#181c1b]">Tapal Tea (Rent)</p>
-                  <p className="text-[#6e7975] mt-0.5">June 16, 2026 • Platform Fee deducted</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-[#00875a]">+ PKR 8,100</p>
-                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${getStatusBadge('Released')}`}>RELEASED</span>
-                </div>
-              </div>
-              <div className="p-3.5 flex justify-between items-center text-xs">
-                <div>
-                  <p className="font-black text-[#181c1b]">Nestle (Rent)</p>
-                  <p className="text-[#6e7975] mt-0.5">June 20, 2026 • Holding in Escrow</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-[#ffab00]">+ PKR 9,000</p>
-                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${getStatusBadge('In Process')}`}>IN PROCESS</span>
-                </div>
-              </div>
-            </div>
+        <div className="bg-white border border-[#e0e3e0] rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.01)] divide-y divide-[#ebefec]">
+          <div 
+            onClick={() => setCurrentView('transaction-history')}
+            className="p-4 flex justify-between items-center cursor-pointer hover:bg-[#ebefec] text-xs transition-colors"
+          >
+            <span className="flex items-center gap-2 font-bold text-[#3e4945]">
+              <span className="material-symbols-outlined text-[20px]">history</span> 
+              Transaction History
+            </span>
+            <span className="material-symbols-outlined text-gray-400">chevron_right</span>
+          </div>
+
+          <div 
+            onClick={() => setCurrentView('payout-settings')}
+            className="p-4 flex justify-between items-center cursor-pointer hover:bg-[#ebefec] text-xs transition-colors"
+          >
+            <span className="flex items-center gap-2 font-bold text-[#3e4945]">
+              <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span> 
+              Payout Details
+            </span>
+            <span className="material-symbols-outlined text-gray-400">chevron_right</span>
           </div>
         </div>
       </div>
@@ -154,6 +144,45 @@ export default function EarningsTab() {
           >
             Link Account
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Transaction History View
+  if (currentView === 'transaction-history') {
+    return (
+      <div className="p-4 space-y-6">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setCurrentView('main')} className="material-symbols-outlined text-[#005344] hover:bg-[#ebefec] p-1 rounded-full shrink-0">
+            arrow_back
+          </button>
+          <h2 className="text-[20px] font-black text-[#005344]">Transaction History</h2>
+        </div>
+
+        <div className="bg-white border border-[#e0e3e0] rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
+          <div className="divide-y divide-[#ebefec]">
+            <div className="p-3.5 flex justify-between items-center text-xs">
+              <div>
+                <p className="font-black text-[#181c1b]">Tapal Tea (Rent)</p>
+                <p className="text-[#6e7975] mt-0.5">June 16, 2026 • Platform Fee deducted</p>
+              </div>
+              <div className="text-right">
+                <p className="font-black text-[#00875a]">+ PKR 8,100</p>
+                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${getStatusBadge('Released')}`}>RELEASED</span>
+              </div>
+            </div>
+            <div className="p-3.5 flex justify-between items-center text-xs">
+              <div>
+                <p className="font-black text-[#181c1b]">Nestle (Rent)</p>
+                <p className="text-[#6e7975] mt-0.5">June 20, 2026 • Holding in Escrow</p>
+              </div>
+              <div className="text-right">
+                <p className="font-black text-[#ffab00]">+ PKR 9,000</p>
+                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${getStatusBadge('In Process')}`}>IN PROCESS</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
