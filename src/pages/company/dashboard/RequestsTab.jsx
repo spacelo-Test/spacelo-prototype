@@ -11,7 +11,9 @@ export default function RequestsTab() {
     setCurrentView,
     viewParams,
     setViewParams,
-    navigateToView
+    navigateToView,
+    availableChains,
+    createCampaign
   } = useCompany();
 
   const [activeSubTab, setActiveSubTab] = useState('requests'); // 'requests' or 'campaigns'
@@ -325,6 +327,21 @@ export default function RequestsTab() {
     );
   }
 
+  if (currentView === 'create-campaign') {
+    return (
+      <CampaignCreatorView 
+        onBack={() => setCurrentView('main')}
+        spaces={spaces}
+        availableChains={availableChains}
+        onLaunch={(data) => {
+          createCampaign(data);
+          setCurrentView('main');
+          alert('Bulk Campaign launched successfully!');
+        }}
+      />
+    );
+  }
+
   // RENDER 3: Bulk Campaign Detail Screen
   if (currentView === 'campaign-detail' && selectedCampaign) {
     return (
@@ -518,38 +535,359 @@ export default function RequestsTab() {
           )
         ) : (
           /* BULK CAMPAIGNS */
-          campaigns.length === 0 ? (
-            <div className="bg-white border border-[#e0e3e0] rounded-xl p-8 text-center flex flex-col items-center justify-center mt-6">
-              <span className="material-symbols-outlined text-[#bec9c4] text-[40px] mb-1">campaign</span>
-              <p className="text-xs font-bold text-[#6e7975]">No bulk campaigns launched.</p>
-            </div>
-          ) : (
-            campaigns.map((c) => (
-              <div 
-                key={c.id}
-                onClick={() => handleOpenCampaignDetail(c.id)}
-                className="bg-white border border-[#e0e3e0] p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer space-y-3"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-bold text-[#6e7975] uppercase">{c.chain}</span>
-                    <h4 className="text-xs font-black text-[#181c1b] leading-tight">{c.name}</h4>
-                  </div>
-                  <span className="text-[8px] bg-[#0d9488]/10 text-[#0d9488] font-black px-1.5 py-0.5 rounded uppercase">
-                    Bulk Campaign
-                  </span>
-                </div>
+          <div className="space-y-4">
+            <button 
+              onClick={() => {
+                setCurrentView('create-campaign');
+                setViewParams(null);
+              }}
+              className="w-full py-3 bg-[#005344] text-white rounded-xl text-xs font-bold shadow-sm hover:opacity-90 transition-all flex items-center justify-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[16px]">add_circle</span>
+              Launch Bulk Campaign
+            </button>
 
-                <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold border-t border-[#ebefec] pt-2">
-                  <div className="text-green-700">Accepted: {c.stats.accepted}</div>
-                  <div className="text-[#ab6b00]">Pending: {c.stats.pending}</div>
-                  <div className="text-red-700">Rejected: {c.stats.rejected}</div>
-                </div>
+            {campaigns.length === 0 ? (
+              <div className="bg-white border border-[#e0e3e0] rounded-xl p-8 text-center flex flex-col items-center justify-center mt-2">
+                <span className="material-symbols-outlined text-[#bec9c4] text-[40px] mb-1">campaign</span>
+                <p className="text-xs font-bold text-[#6e7975]">No bulk campaigns launched.</p>
               </div>
-            ))
-          )
+            ) : (
+              campaigns.map((c) => (
+                <div 
+                  key={c.id}
+                  onClick={() => handleOpenCampaignDetail(c.id)}
+                  className="bg-white border border-[#e0e3e0] p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer space-y-3"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[9px] font-bold text-[#6e7975] uppercase">{c.chain}</span>
+                      <h4 className="text-xs font-black text-[#181c1b] leading-tight">{c.name}</h4>
+                    </div>
+                    <span className="text-[8px] bg-[#0d9488]/10 text-[#0d9488] font-black px-1.5 py-0.5 rounded uppercase">
+                      Bulk Campaign
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold border-t border-[#ebefec] pt-2">
+                    <div className="text-green-700">Accepted: {c.stats.accepted}</div>
+                    <div className="text-[#ab6b00]">Pending: {c.stats.pending}</div>
+                    <div className="text-red-700">Rejected: {c.stats.rejected}</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function CampaignCreatorView({ onBack, spaces, availableChains, onLaunch }) {
+  const [step, setStep] = useState(1);
+  const [selectedChain, setSelectedChain] = useState(null);
+  const [campName, setCampName] = useState('');
+  const [spaceType, setSpaceType] = useState('end_cap');
+  const [month, setMonth] = useState('June 2026');
+  const [proposedPrice, setProposedPrice] = useState(45000);
+  const [productName, setProductName] = useState('');
+  const [selectedBranches, setSelectedBranches] = useState([]);
+
+  // Dynamically resolve branches that have spaces for the selected chain
+  const chainSpaces = selectedChain
+    ? spaces.filter(s => s.shop.toLowerCase().includes(selectedChain.name.split(' ')[0].toLowerCase()))
+    : [];
+
+  const handleToggleBranch = (space) => {
+    if (selectedBranches.some(b => b.id === space.id)) {
+      setSelectedBranches(prev => prev.filter(b => b.id !== space.id));
+    } else {
+      setSelectedBranches(prev => [...prev, space]);
+    }
+  };
+
+  const handleNext = () => {
+    if (step === 1 && !selectedChain) {
+      alert("Please select a retail chain.");
+      return;
+    }
+    if (step === 2) {
+      if (!campName.trim() || !productName.trim() || !proposedPrice) {
+        alert("Please fill in all campaign details.");
+        return;
+      }
+    }
+    if (step === 3 && selectedBranches.length === 0) {
+      alert("Please select at least one branch.");
+      return;
+    }
+    setStep(prev => prev + 1);
+  };
+
+  const handlePrev = () => {
+    if (step > 1) {
+      setStep(prev => prev - 1);
+    } else {
+      onBack();
+    }
+  };
+
+  const handleSubmit = () => {
+    onLaunch({
+      name: campName,
+      chain: selectedChain.name,
+      month: month,
+      productName: productName,
+      branches: selectedBranches.map(b => ({
+        id: b.id,
+        name: b.branch || b.nickname,
+        area: `${b.area || b.city}, Pakistan`,
+        status: "Pending",
+        price: Number(proposedPrice),
+        type: spaceType
+      }))
+    });
+  };
+
+  const getSpaceTypeLabel = (type) => {
+    const labels = {
+      shelf: "Shelf",
+      end_cap: "End-Cap",
+      window_display: "Window Display",
+      floor_stand: "Floor Stand",
+      checkout_counter: "Checkout Counter",
+      entrance_display: "Entrance Display",
+      promotional_aisle: "Promotional Aisle"
+    };
+    return labels[type] || type;
+  };
+
+  return (
+    <div className="bg-[#f7faf7] min-h-full flex flex-col font-manrope">
+      {/* TopAppBar */}
+      <header className="bg-white sticky top-0 shadow-sm z-40 w-full border-b border-[#e0e3e0]">
+        <div className="flex items-center justify-between px-4 h-16 w-full mx-auto max-w-[390px]">
+          <div className="flex items-center gap-2">
+            <button onClick={handlePrev} className="material-symbols-outlined text-[#005344] cursor-pointer hover:bg-[#e5e9e6] transition-colors p-1 rounded-full text-[20px]">
+              arrow_back
+            </button>
+            <h1 className="text-[17px] font-black text-[#005344]">Launch Campaign</h1>
+          </div>
+          <span className="text-[10px] font-black text-[#6e7975] uppercase tracking-wider">
+            Step {step} of 4
+          </span>
+        </div>
+      </header>
+
+      {/* Progress Bar */}
+      <div className="w-full bg-gray-200 h-1 shrink-0">
+        <div className="bg-[#005344] h-1 transition-all duration-300" style={{ width: `${(step / 4) * 100}%` }}></div>
+      </div>
+
+      <main className="flex-grow pt-4 pb-28 px-4 w-full mx-auto max-w-[390px] space-y-5 overflow-y-auto">
+        {step === 1 && (
+          <div className="bg-white border border-[#e0e3e0] p-4 rounded-xl shadow-sm space-y-4">
+            <h3 className="text-xs font-black uppercase text-[#005344] border-b border-[#ebefec] pb-1.5 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[18px]">store</span>
+              Step 1: Select Retail Chain
+            </h3>
+            <div className="space-y-2.5">
+              {availableChains.map(c => (
+                <div 
+                  key={c.id}
+                  onClick={() => setSelectedChain(c)}
+                  className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                    selectedChain?.id === c.id 
+                      ? 'border-[#005344] bg-[#005344]/5' 
+                      : 'border-[#e0e3e0] bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="font-extrabold text-xs text-[#3e4945]">{c.name}</span>
+                  {selectedChain?.id === c.id && (
+                    <span className="material-symbols-outlined text-[#005344] text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="bg-white border border-[#e0e3e0] p-4 rounded-xl shadow-sm space-y-4">
+            <h3 className="text-xs font-black uppercase text-[#005344] border-b border-[#ebefec] pb-1.5 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[18px]">edit_note</span>
+              Step 2: Campaign Details
+            </h3>
+            <div className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-[#3e4945]">Campaign Name</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. Q3 Beverages Launch"
+                  value={campName}
+                  onChange={(e) => setCampName(e.target.value)}
+                  className="w-full h-11 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none font-bold" 
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-[#3e4945]">Product Name / SKU</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. Sunsilk Green Tea 250ml"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  className="w-full h-11 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none font-bold" 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-[#3e4945]">Preferred Space Type</label>
+                  <select 
+                    value={spaceType}
+                    onChange={(e) => setSpaceType(e.target.value)}
+                    className="w-full h-11 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none font-bold"
+                  >
+                    <option value="end_cap">End-Cap</option>
+                    <option value="shelf">Shelf</option>
+                    <option value="checkout_counter">Checkout Counter</option>
+                    <option value="entrance_display">Entrance Display</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-[#3e4945]">Target Month</label>
+                  <select 
+                    value={month}
+                    onChange={(e) => setMonth(e.target.value)}
+                    className="w-full h-11 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none font-bold"
+                  >
+                    <option>June 2026</option>
+                    <option>July 2026</option>
+                    <option>August 2026</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-[#3e4945]">Proposed Price per Branch (PKR Total)</label>
+                <input 
+                  type="number" 
+                  required
+                  value={proposedPrice}
+                  onChange={(e) => setProposedPrice(e.target.value)}
+                  className="w-full h-11 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none font-bold" 
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="bg-white border border-[#e0e3e0] p-4 rounded-xl shadow-sm space-y-4">
+            <h3 className="text-xs font-black uppercase text-[#005344] border-b border-[#ebefec] pb-1.5 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[18px]">rule_folder</span>
+              Step 3: Select Branches ({selectedBranches.length} selected)
+            </h3>
+            {chainSpaces.length === 0 ? (
+              <p className="text-xs text-gray-500 font-bold text-center py-6">No branches in database for this chain.</p>
+            ) : (
+              <div className="space-y-2.5">
+                {chainSpaces.map(space => {
+                  const isChecked = selectedBranches.some(b => b.id === space.id);
+                  return (
+                    <div 
+                      key={space.id}
+                      onClick={() => handleToggleBranch(space)}
+                      className={`p-3.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                        isChecked 
+                          ? 'border-[#005344] bg-[#005344]/5' 
+                          : 'border-[#e0e3e0] bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      <div>
+                        <h4 className="font-bold text-xs text-[#181c1b]">{space.branch || space.nickname}</h4>
+                        <p className="text-[10px] text-[#6e7975] mt-0.5">{space.area || space.city}</p>
+                      </div>
+                      <span className="material-symbols-outlined text-[#005344] text-[20px]">
+                        {isChecked ? 'check_box' : 'check_box_outline_blank'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="bg-white border border-[#e0e3e0] p-4 rounded-xl shadow-sm space-y-4">
+            <h3 className="text-xs font-black uppercase text-[#005344] border-b border-[#ebefec] pb-1.5 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[18px]">verified_user</span>
+              Step 4: Review Campaign
+            </h3>
+            <div className="space-y-3.5 text-xs text-[#3e4945]">
+              <div className="border-b border-[#ebefec] pb-2">
+                <span className="text-[9px] font-bold text-[#6e7975] uppercase">Campaign Name</span>
+                <p className="font-black text-[#181c1b] text-[13px]">{campName}</p>
+              </div>
+              <div className="border-b border-[#ebefec] pb-2">
+                <span className="text-[9px] font-bold text-[#6e7975] uppercase">Product Name</span>
+                <p className="font-black text-[#181c1b]">{productName}</p>
+              </div>
+              <div className="border-b border-[#ebefec] pb-2">
+                <span className="text-[9px] font-bold text-[#6e7975] uppercase">Target Chain & Space</span>
+                <p className="font-black text-[#181c1b]">{selectedChain.name} — {getSpaceTypeLabel(spaceType).toUpperCase()}</p>
+              </div>
+              <div className="border-b border-[#ebefec] pb-2">
+                <span className="text-[9px] font-bold text-[#6e7975] uppercase">Target Month & Price per branch</span>
+                <p className="font-black text-[#181c1b]">{month} • PKR {Number(proposedPrice).toLocaleString()}/branch</p>
+              </div>
+              <div>
+                <span className="text-[9px] font-bold text-[#6e7975] uppercase block mb-1">Target Branches ({selectedBranches.length})</span>
+                <div className="max-h-[120px] overflow-y-auto border border-[#ebefec] rounded-lg p-2.5 bg-gray-50 space-y-1">
+                  {selectedBranches.map(b => (
+                    <p key={b.id} className="font-bold text-[11px] text-[#181c1b]">• {b.branch || b.nickname} ({b.area})</p>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-[#005344]/5 p-3 rounded-lg border border-[#005344]/20 flex justify-between items-center mt-3 shrink-0">
+                <span className="font-bold text-[11px] text-[#005344]">Total Budget:</span>
+                <span className="font-black text-[#005344] text-[15px]">PKR {(proposedPrice * selectedBranches.length).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-3 pt-2">
+          {step > 1 && (
+            <button 
+              onClick={handlePrev}
+              className="flex-1 py-3 border border-[#bec9c4] text-[#6e7975] bg-white font-bold rounded-xl text-xs hover:bg-gray-50 transition-all cursor-pointer"
+            >
+              Back
+            </button>
+          )}
+          {step < 4 ? (
+            <button 
+              onClick={handleNext}
+              className="flex-[2] py-3 bg-[#005344] hover:bg-[#003d32] text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer"
+            >
+              Continue
+            </button>
+          ) : (
+            <button 
+              onClick={handleSubmit}
+              className="flex-[2] py-3 bg-[#fe6a34] hover:bg-[#e05620] text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer"
+            >
+              Launch Bulk Campaign
+            </button>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

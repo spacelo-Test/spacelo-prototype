@@ -12,6 +12,7 @@ export default function BrowseTab() {
   } = useCompany();
 
   const [browseMode, setBrowseMode] = useState('home'); // 'home' | 'search' | 'advance'
+  const [activeTab, setActiveTab] = useState('available'); // 'available' | 'advance'
   const [selectedSpace, setSelectedSpace] = useState(null);
   const [spaceMode, setSpaceMode] = useState(null); // 'regular' | 'advance'
 
@@ -139,23 +140,32 @@ export default function BrowseTab() {
   const getAdvanceSpaces = () => {
     return spaces.filter(space => {
       const bookedUntil = getBookedUntilDate(space.id);
-      if (!bookedUntil) return false; // Only show booked spaces that free up
+      if (!bookedUntil) return false;
       
-      // Free up on or before selected start date
       const matchesAvailability = new Date(bookedUntil) <= new Date(advanceForm.dateStart);
       if (!matchesAvailability) return false;
 
-      const matchesCity = advanceForm.city ? space.city === advanceForm.city : true;
-      const matchesArea = advanceForm.area ? space.area.toLowerCase().includes(advanceForm.area.toLowerCase()) : true;
-      const matchesTypes = advanceForm.spaceTypes.length > 0 ? advanceForm.spaceTypes.includes(space.type) : true;
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        space.nickname.toLowerCase().includes(query) ||
+        space.shop.toLowerCase().includes(query) ||
+        space.area.toLowerCase().includes(query);
+
+      const matchesCity = filters.city ? space.city === filters.city : true;
+      const matchesArea = filters.area ? space.area.toLowerCase().includes(filters.area.toLowerCase()) : true;
+      const matchesTypes = filters.spaceTypes.length > 0 ? filters.spaceTypes.includes(space.type) : true;
       
       let matchesChain = true;
-      if (advanceForm.chainId) {
-        const chain = availableChains.find(c => c.id === advanceForm.chainId);
+      if (filters.chainId) {
+        const chain = availableChains.find(c => c.id === filters.chainId);
         matchesChain = chain ? space.shop.toLowerCase().includes(chain.name.split(' ')[0].toLowerCase()) : true;
       }
 
-      return matchesCity && matchesArea && matchesTypes && matchesChain;
+      const matchesMinPrice = filters.priceMin ? space.price >= Number(filters.priceMin) : true;
+      const matchesMaxPrice = filters.priceMax ? space.price <= Number(filters.priceMax) : true;
+      const matchesRating = space.rating >= filters.minTrustScore;
+
+      return matchesSearch && matchesCity && matchesArea && matchesTypes && matchesChain && matchesMinPrice && matchesMaxPrice && matchesRating;
     });
   };
 
@@ -1342,19 +1352,562 @@ export default function BrowseTab() {
     );
   };
 
+  const renderFilters = () => {
+    if (!filterPanelOpen) return null;
+    return (
+      <div className="fixed inset-0 z-[100] bg-[#181c1b]/40 backdrop-blur-sm flex items-end justify-center">
+        <div className="bg-white rounded-t-2xl w-full max-w-[390px] p-5 shadow-2xl space-y-4 max-h-[90%] overflow-y-auto text-left">
+          
+          <div className="flex justify-between items-center pb-2 border-b border-[#ebefec]">
+            <h3 className="text-sm font-black text-[#005344] flex items-center gap-1">
+              <span className="material-symbols-outlined text-[18px]">tune</span>
+              Filters
+            </h3>
+            <button onClick={() => setFilterPanelOpen(false)} className="material-symbols-outlined text-gray-400 text-[20px]">close</button>
+          </div>
+
+          <div className="space-y-4 text-xs">
+            {/* City Dropdown */}
+            <div className="space-y-1">
+              <label className="font-bold text-[#181c1b]">City</label>
+              <select 
+                value={filters.city}
+                onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
+                className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none text-xs"
+              >
+                <option value="">All Cities</option>
+                <option>Lahore</option>
+                <option>Karachi</option>
+                <option>Islamabad</option>
+              </select>
+            </div>
+
+            {/* Area Input */}
+            <div className="space-y-1">
+              <label className="font-bold text-[#181c1b]">Area / Locality</label>
+              <input 
+                type="text" 
+                placeholder="e.g. Gulberg, DHA"
+                value={filters.area}
+                onChange={(e) => setFilters(prev => ({ ...prev, area: e.target.value }))}
+                className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none text-xs"
+              />
+            </div>
+
+            {/* Space Type Chips */}
+            <div className="space-y-1.5">
+              <label className="font-bold text-[#181c1b]">Space Type</label>
+              <div className="flex flex-wrap gap-1.5">
+                {["shelf", "end_cap", "window_display", "floor_stand", "checkout_counter", "entrance_display", "promotional_aisle"].map(type => {
+                  const isSelected = filters.spaceTypes.includes(type);
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        setFilters(prev => {
+                          const types = prev.spaceTypes.includes(type)
+                            ? prev.spaceTypes.filter(t => t !== type)
+                            : [...prev.spaceTypes, type];
+                          return { ...prev, spaceTypes: types };
+                        });
+                      }}
+                      className={`px-3 py-1.5 rounded-full font-bold border transition-all text-[9px] uppercase ${isSelected ? 'bg-[#005344] border-[#005344] text-white' : 'bg-[#ebefec] border-transparent text-[#3e4945]'}`}
+                    >
+                      {getSpaceTypeLabel(type)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Chain Brand dropdown */}
+            <div className="space-y-1">
+              <label className="font-bold text-[#181c1b]">Chain Brand</label>
+              <select 
+                value={filters.chainId}
+                onChange={(e) => setFilters(prev => ({ ...prev, chainId: e.target.value }))}
+                className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none text-xs"
+              >
+                <option value="">All Shops & Malls</option>
+                {availableChains.map(chain => (
+                  <option key={chain.id} value={chain.id}>
+                    {chain.name} {chain.verified ? '✓' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Price Range */}
+            <div className="space-y-1">
+              <label className="font-bold text-[#181c1b]">Price Budget (PKR)</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input 
+                  type="number" 
+                  placeholder="Min Price"
+                  value={filters.priceMin}
+                  onChange={(e) => setFilters(prev => ({ ...prev, priceMin: e.target.value }))}
+                  className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none text-xs"
+                />
+                <input 
+                  type="number" 
+                  placeholder="Max Price"
+                  value={filters.priceMax}
+                  onChange={(e) => setFilters(prev => ({ ...prev, priceMax: e.target.value }))}
+                  className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Date Ranges */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="font-bold text-[#181c1b]">Start Date</label>
+                <input 
+                  type="date"
+                  value={filters.dateStart}
+                  onChange={(e) => setFilters(prev => ({ ...prev, dateStart: e.target.value }))}
+                  className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="font-bold text-[#181c1b]">End Date</label>
+                <input 
+                  type="date"
+                  value={filters.dateEnd}
+                  onChange={(e) => setFilters(prev => ({ ...prev, dateEnd: e.target.value }))}
+                  className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Trust Score Slider */}
+            <div className="space-y-1">
+              <div className="flex justify-between font-bold">
+                <span>Min Trust Score</span>
+                <span className="text-[#fe6a34]">{filters.minTrustScore}★ & above</span>
+              </div>
+              <input 
+                type="range" 
+                min={0} 
+                max={5} 
+                step={0.5}
+                value={filters.minTrustScore}
+                onChange={(e) => setFilters(prev => ({ ...prev, minTrustScore: Number(e.target.value) }))}
+                className="w-full h-1 bg-[#ebefec] rounded-lg appearance-none cursor-pointer accent-[#fe6a34]"
+              />
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-[#ebefec] flex gap-2">
+            <button 
+              onClick={() => setFilters({
+                city: '', area: '', spaceTypes: [], chainId: '', priceMin: '', priceMax: '', dateStart: '2026-06-01', dateEnd: '2026-08-31', minTrustScore: 0
+              })}
+              className="flex-1 py-2.5 border border-[#bec9c4] text-[#3e4945] rounded-xl font-bold hover:bg-[#F3F4F6] text-xs transition-all cursor-pointer"
+            >
+              Reset
+            </button>
+            <button 
+              onClick={() => setFilterPanelOpen(false)}
+              className="flex-grow-[2] py-2.5 bg-[#005344] text-white rounded-xl font-bold hover:bg-[#003d32] text-xs shadow-md transition-all cursor-pointer"
+            >
+              Apply Filters
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  };
+
+  const renderRequestSheet = () => {
+    if (!requestSheetOpen || !selectedSpace) return null;
+    return (
+      <div className="fixed inset-0 z-[100] bg-[#181c1b]/40 backdrop-blur-sm flex items-end justify-center">
+        <div className="bg-white rounded-t-2xl w-full max-w-[390px] p-5 shadow-2xl space-y-4 max-h-[90%] overflow-y-auto text-left">
+          
+          <div className="flex justify-between items-center pb-2 border-b border-[#ebefec]">
+            <h3 className="text-sm font-black text-[#005344] flex items-center gap-1">
+              <span className="material-symbols-outlined text-[18px]">send</span>
+              Proposal Details
+            </h3>
+            <button onClick={() => setRequestSheetOpen(false)} className="material-symbols-outlined text-gray-400 text-[20px]">close</button>
+          </div>
+
+          <div className="bg-[#f7faf7] border border-[#e0e3e0] p-3 rounded-xl flex gap-3 items-center">
+            <img src={selectedSpace.photos[0]} alt="" className="w-12 h-12 rounded-lg object-cover bg-gray-50 border shrink-0" />
+            <div className="min-w-0 flex-1 text-[11px] leading-tight">
+              <span className="bg-[#fe6a34]/10 text-[#fe6a34] font-black px-1.5 rounded uppercase text-[8px]">
+                {getSpaceTypeLabel(selectedSpace.type)}
+              </span>
+              <h4 className="font-black text-[#181c1b] truncate mt-0.5">{selectedSpace.nickname}</h4>
+              <p className="text-[#6e7975]">{selectedSpace.shop} — PKR {selectedSpace.price.toLocaleString()}/mo</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSendRequest} className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="font-bold text-[#3e4945]">Start Date</label>
+                <input 
+                  type="date"
+                  required
+                  value={requestForm.dateStart}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, dateStart: e.target.value }))}
+                  className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="font-bold text-[#3e4945]">End Date</label>
+                <input 
+                  type="date"
+                  required
+                  value={requestForm.dateEnd}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, dateEnd: e.target.value }))}
+                  className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex justify-between font-bold text-[#3e4945]">
+                <span>Offer Price (PKR Total)</span>
+                <span className="text-[#fe6a34]">Asking: PKR {(selectedSpace.price * (calculateDurationMonths(requestForm.dateStart, requestForm.dateEnd) || 1)).toLocaleString()}</span>
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-[#6e7975]">PKR</span>
+                <input 
+                  type="number"
+                  required
+                  value={requestForm.offerPrice}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, offerPrice: e.target.value }))}
+                  className="w-full h-11 pl-12 pr-4 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none font-black text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-[#3e4945]">Product Name</label>
+              <input 
+                type="text"
+                required
+                placeholder="e.g. Nestlé Everyday Powder"
+                value={requestForm.productName}
+                onChange={(e) => setRequestForm(prev => ({ ...prev, productName: e.target.value }))}
+                className="w-full h-10 px-3 bg-[#F3F4F6] border border-[#bec9c4] rounded-lg outline-none"
+              />
+            </div>
+
+            <button 
+              type="submit"
+              className="w-full bg-[#005344] hover:bg-[#003d32] text-white font-bold py-3.5 rounded-xl text-xs shadow-md transition-all mt-2 cursor-pointer"
+            >
+              Send Request
+            </button>
+
+            <p className="text-[9px] text-[#6e7975] font-semibold text-center">
+              {spaceMode === 'regular' 
+                ? 'Shopkeeper will respond within 24 hours.' 
+                : 'This is an advance request. Booking activates on your selected start date.'}
+            </p>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  const renderNotifyModal = () => {
+    if (!showNotifyModal || !selectedSpace) return null;
+    return (
+      <div className="fixed inset-0 z-[100] bg-[#181c1b]/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl relative overflow-hidden flex flex-col space-y-4 text-left">
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-[#fe6a34]"></div>
+          
+          <div className="flex justify-between items-center pb-2 border-b border-[#ebefec]">
+            <h3 className="text-sm font-black text-[#fe6a34] flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[20px]">notifications_active</span>
+              Set Availability Alert
+            </h3>
+            <button onClick={() => setShowNotifyModal(false)} className="material-symbols-outlined text-gray-400 text-[18px]">close</button>
+          </div>
+
+          <div className="space-y-3.5 text-xs text-[#3e4945] leading-relaxed">
+            <div className="bg-[#f7faf7] border border-[#e0e3e0] p-3 rounded-lg space-y-1 font-semibold">
+              <p>• <strong>Type</strong>: {getSpaceTypeLabel(selectedSpace.type)}</p>
+              <p>• <strong>Shop</strong>: {selectedSpace.shop}</p>
+              <p>• <strong>Location</strong>: {selectedSpace.city} — {selectedSpace.area}</p>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-[#181c1b]">Notification Channel</label>
+              <div className="grid grid-cols-3 gap-2">
+                {["Push", "Email", "Both"].map(channel => (
+                  <button
+                    key={channel}
+                    type="button"
+                    onClick={() => setNotifyForm({ channel })}
+                    className={`py-2 rounded-lg font-bold border text-center transition-all cursor-pointer ${notifyForm.channel === channel ? 'bg-[#fe6a34]/15 border-[#fe6a34] text-[#fe6a34]' : 'bg-[#F3F4F6] border-transparent text-[#6e7975]'}`}
+                  >
+                    {channel}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleCreateAlert}
+            className="w-full bg-[#005344] hover:bg-[#003d32] text-white font-bold py-3 rounded-xl text-xs shadow cursor-pointer"
+          >
+            Save Availability Alert
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   // Render logic based on mode
   if (selectedSpace) {
     return renderDetail();
   }
 
-  switch (browseMode) {
-    case 'home':
-      return renderHome();
-    case 'search':
-      return renderSearch();
-    case 'advance':
-      return renderAdvance();
-    default:
-      return renderHome();
-  }
+  const results = activeTab === 'available' ? getRegularSpaces() : getAdvanceSpaces();
+
+  return (
+    <div className="bg-[#f7faf7] h-full flex flex-col font-manrope overflow-hidden">
+      {/* 2-Tab Switcher at Top */}
+      <div className="flex bg-white border-b border-[#e0e3e0] shrink-0 h-12 w-full justify-around items-center z-10 shadow-sm">
+        <button 
+          onClick={() => { setActiveTab('available'); setSearchQuery(''); }}
+          className={`flex-grow h-full font-black text-[11px] uppercase tracking-wider relative transition-all ${activeTab === 'available' ? 'text-[#005344]' : 'text-[#6e7975]'}`}
+        >
+          Available Now
+          {activeTab === 'available' && (
+            <span className="absolute bottom-0 left-1/4 right-1/4 h-[3px] bg-[#005344] rounded-t-full" />
+          )}
+        </button>
+
+        <button 
+          onClick={() => { setActiveTab('advance'); setSearchQuery(''); }}
+          className={`flex-grow h-full font-black text-[11px] uppercase tracking-wider relative transition-all ${activeTab === 'advance' ? 'text-[#fe6a34]' : 'text-[#6e7975]'}`}
+        >
+          Advance Bookings
+          {activeTab === 'advance' && (
+            <span className="absolute bottom-0 left-1/4 right-1/4 h-[3px] bg-[#fe6a34] rounded-t-full" />
+          )}
+        </button>
+      </div>
+
+      {/* Search and Filters Toolbar */}
+      <div className="bg-white p-3 border-b border-[#e0e3e0] space-y-2 shrink-0">
+        <div className="flex gap-2">
+          <div className="relative flex-grow">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1-2 text-[#6e7975] text-[18px]">search</span>
+            <input 
+              type="text" 
+              placeholder={activeTab === 'available' ? "Search store, branch, area..." : "Search upcoming listings..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-10 pl-9 pr-3 bg-[#F3F4F6] rounded-xl outline-none text-xs focus:ring-1 focus:ring-[#005344] border-transparent"
+            />
+          </div>
+          <button 
+            onClick={() => setFilterPanelOpen(true)}
+            className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 transition-all ${
+              activeTab === 'advance' 
+                ? 'border-[#fe6a34]/30 text-[#fe6a34] bg-[#fe6a34]/5 hover:bg-[#fe6a34]/10' 
+                : 'border-[#005344]/30 text-[#005344] bg-[#005344]/5 hover:bg-[#005344]/10'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">tune</span>
+          </button>
+        </div>
+
+        {/* If advance tab, display start/end date selectors directly inline */}
+        {activeTab === 'advance' && (
+          <div className="grid grid-cols-2 gap-3 text-[10px] font-bold pb-1 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+            <div className="space-y-0.5">
+              <label className="text-[9px] text-[#6e7975] uppercase block">Required From Date</label>
+              <input 
+                type="date"
+                value={advanceForm.dateStart}
+                onChange={(e) => setAdvanceForm(prev => ({ ...prev, dateStart: e.target.value }))}
+                className="w-full h-8 px-2 bg-white border border-[#bec9c4] rounded-lg outline-none text-[11px] font-bold"
+              />
+            </div>
+            <div className="space-y-0.5">
+              <label className="text-[9px] text-[#6e7975] uppercase block">Required To Date</label>
+              <input 
+                type="date"
+                value={advanceForm.dateEnd}
+                onChange={(e) => setAdvanceForm(prev => ({ ...prev, dateEnd: e.target.value }))}
+                className="w-full h-8 px-2 bg-white border border-[#bec9c4] rounded-lg outline-none text-[11px] font-bold"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-[10px] font-bold text-[#6e7975] uppercase">{results.length} spaces matching</span>
+          <div className="flex border border-[#bec9c4] rounded-lg overflow-hidden shrink-0">
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1 text-[10px] font-bold transition-all ${viewMode === 'list' ? (activeTab === 'advance' ? 'bg-[#fe6a34] text-white' : 'bg-[#005344] text-white') : 'bg-white text-[#6e7975]'}`}
+            >
+              List
+            </button>
+            <button 
+              onClick={() => setViewMode('map')}
+              className={`px-3 py-1 text-[10px] font-bold transition-all ${viewMode === 'map' ? (activeTab === 'advance' ? 'bg-[#fe6a34] text-white' : 'bg-[#005344] text-white') : 'bg-white text-[#6e7975]'}`}
+            >
+              Map
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Results panel */}
+      <div className="flex-grow overflow-y-auto pb-20">
+        {viewMode === 'list' ? (
+          results.length === 0 ? (
+            <div className="p-8 text-center flex flex-col items-center justify-center mt-8 space-y-2">
+              <span className="material-symbols-outlined text-[#bec9c4] text-[48px]">sentiment_dissatisfied</span>
+              <p className="text-xs font-bold text-[#6e7975]">No spaces found matching your criteria.</p>
+              <button 
+                onClick={() => setFilters({
+                  city: '', area: '', spaceTypes: [], chainId: '', priceMin: '', priceMax: '', dateStart: '2026-06-01', dateEnd: '2026-08-31', minTrustScore: 0
+                })}
+                className="text-xs text-[#005344] font-black underline mt-2"
+              >
+                Reset all filters
+              </button>
+            </div>
+          ) : (
+            <div className="p-4 space-y-4">
+              {results.map((space) => {
+                const duration = calculateDurationMonths(
+                  activeTab === 'available' ? filters.dateStart : advanceForm.dateStart,
+                  activeTab === 'available' ? filters.dateEnd : advanceForm.dateEnd
+                );
+                const totalPrice = space.price * duration;
+                const bookedUntil = getBookedUntilDate(space.id);
+                return (
+                  <div 
+                    key={space.id}
+                    onClick={() => handleOpenDetail(space, activeTab === 'available' ? 'regular' : 'advance')}
+                    className="bg-white border border-[#e0e3e0] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer flex p-3 gap-3"
+                  >
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 shrink-0 border relative">
+                      <img src={space.photos[0]} alt="" className="w-full h-full object-cover" />
+                      {activeTab === 'available' ? (
+                        <span className="absolute bottom-1 right-1 bg-green-600 text-white font-black text-[7px] px-1.5 py-0.2 rounded uppercase">
+                          Available
+                        </span>
+                      ) : (
+                        <span className="absolute bottom-1 right-1 bg-[#fe6a34] text-white font-black text-[7px] px-1.5 py-0.2 rounded uppercase">
+                          Booked
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="min-w-0 flex-grow flex flex-col justify-between text-xs">
+                      <div>
+                        <div className="flex justify-between items-center gap-1.5 flex-wrap">
+                          <span className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase bg-[#fe6a34]/15 text-[#fe6a34]`}>
+                            {getSpaceTypeLabel(space.type)}
+                          </span>
+                          <span className="text-[9px] font-black text-[#fe6a34] flex items-center gap-0.5">
+                            <span className="material-symbols-outlined text-[12px] filled">star</span>
+                            {space.rating}
+                          </span>
+                        </div>
+                        
+                        <h4 className="font-black text-[#181c1b] truncate mt-1">{space.nickname}</h4>
+                        <p className="text-[10px] text-[#6e7975] mt-0.5">{space.shop} — {space.area}</p>
+                      </div>
+
+                      <div className="flex justify-between items-end border-t border-[#ebefec] pt-1.5 mt-1.5">
+                        <span className="text-[9px] text-[#6e7975] font-semibold">
+                          {activeTab === 'available' ? space.city : `Free from ${bookedUntil}`}
+                        </span>
+                        <span className="font-black text-[#005344] text-right">
+                          {duration > 0 ? (
+                            <>
+                              <p className="text-[11px]">PKR {totalPrice.toLocaleString()}</p>
+                              <p className="text-[8px] text-[#6e7975] font-bold">for {duration} mo</p>
+                            </>
+                          ) : (
+                            <p className="text-[11px]">PKR {space.price.toLocaleString()}/mo</p>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        ) : (
+          /* MAP VIEW */
+          <div className="w-full h-full bg-[#e5e9e5] relative overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#005344_1.5px,transparent_1.5px)] [background-size:16px_16px]"></div>
+            
+            {results.map((s, idx) => {
+              const positions = [
+                { top: '30%', left: '35%' },
+                { top: '60%', left: '20%' },
+                { top: '25%', left: '70%' },
+                { top: '48%', left: '55%' },
+                { top: '40%', left: '15%' }
+              ];
+              const pos = positions[idx % positions.length];
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedPin(s)}
+                  className="absolute cursor-pointer transform hover:scale-110 active:scale-95 transition-transform"
+                  style={{ top: pos.top, left: pos.left }}
+                >
+                  <span className={`material-symbols-outlined text-[30px] filled drop-shadow-md ${activeTab === 'advance' ? 'text-[#fe6a34]' : 'text-[#005344]'}`}>
+                    location_on
+                  </span>
+                </button>
+              );
+            })}
+
+            {selectedPin && (
+              <div className="absolute bottom-4 left-4 right-4 bg-white border border-[#e0e3e0] p-3 rounded-xl shadow-lg flex gap-3 items-center z-10">
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                  <img src={selectedPin.photos[0]} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-grow text-xs">
+                  <h4 className="font-black text-[#181c1b] truncate">{selectedPin.nickname}</h4>
+                  <p className="text-[10px] text-[#6e7975] mt-0.5">{selectedPin.shop} — PKR {selectedPin.price.toLocaleString()}/mo</p>
+                  <button 
+                    onClick={() => handleOpenDetail(selectedPin, activeTab === 'available' ? 'regular' : 'advance')}
+                    className={`mt-1.5 px-3 py-1 rounded text-[10px] font-black text-white ${activeTab === 'advance' ? 'bg-[#fe6a34]' : 'bg-[#005344]'}`}
+                  >
+                    View Space Details
+                  </button>
+                </div>
+                <button onClick={() => setSelectedPin(null)} className="material-symbols-outlined text-gray-400 hover:text-gray-600 text-[18px]">
+                  close
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Render Filters Modal */}
+      {renderFilters()}
+
+      {/* Request bottom sheet */}
+      {renderRequestSheet()}
+
+      {/* Notify Modal popup */}
+      {renderNotifyModal()}
+    </div>
+  );
 }

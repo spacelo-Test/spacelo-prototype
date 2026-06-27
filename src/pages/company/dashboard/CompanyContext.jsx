@@ -397,21 +397,29 @@ export function CompanyProvider({ children }) {
   });
 
   // 3. Campaigns (Bulk requests)
-  const [campaigns, setCampaigns] = useState([
-    {
-      id: "camp_1",
-      name: "Imtiaz Launch Campaign",
-      chain: "Imtiaz Supermarket",
-      month: "June 2026",
-      stats: { accepted: 2, pending: 1, rejected: 1 },
-      branches: [
-        { id: 201, name: "Johar Town Branch", area: "Johar Town, Lahore", status: "Accepted", price: 45000, type: "end_cap" },
-        { id: 202, name: "Gulberg Branch", area: "Gulberg, Lahore", status: "Counter-offered", price: 90000, type: "promotional_aisle" },
-        { id: 203, name: "DHA Phase 6 Branch", area: "DHA Phase 6, Lahore", status: "Pending", price: 42000, type: "end_cap" },
-        { id: 204, name: "Clifton Branch", area: "Clifton, Karachi", status: "Rejected", price: 45000, type: "end_cap" }
-      ]
+  const [campaigns, setCampaigns] = useState(() => {
+    const saved = localStorage.getItem('spacelo_campaigns');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
     }
-  ]);
+    return [
+      {
+        id: "camp_1",
+        name: "Imtiaz Launch Campaign",
+        chain: "Imtiaz Supermarket",
+        month: "June 2026",
+        stats: { accepted: 2, pending: 1, rejected: 1 },
+        branches: [
+          { id: 201, name: "Johar Town Branch", area: "Johar Town, Lahore", status: "Accepted", price: 45000, type: "end_cap" },
+          { id: 202, name: "Gulberg Branch", area: "Gulberg, Lahore", status: "Counter-offered", price: 90000, type: "promotional_aisle" },
+          { id: 203, name: "DHA Phase 6 Branch", area: "DHA Phase 6, Lahore", status: "Pending", price: 42000, type: "end_cap" },
+          { id: 204, name: "Clifton Branch", area: "Clifton, Karachi", status: "Rejected", price: 45000, type: "end_cap" }
+        ]
+      }
+    ];
+  });
 
   // 4. Custom Alerts list
   const [alerts, setAlerts] = useState([
@@ -574,6 +582,44 @@ export function CompanyProvider({ children }) {
     { id: 'metro', name: 'Metro Cash & Carry', verified: true }
   ];
 
+  const createCampaign = (campaignData) => {
+    const newCamp = {
+      id: 'camp_' + Date.now(),
+      stats: { accepted: 0, pending: campaignData.branches.length, rejected: 0 },
+      ...campaignData
+    };
+    setCampaigns(prev => [newCamp, ...prev]);
+
+    // Also send individual requests to the requests database so they show up under Outgoing Requests
+    campaignData.branches.forEach(b => {
+      const duration = 3; // default 3 months
+      const newReq = {
+        id: Date.now() + Math.round(Math.random() * 100000), // ensure unique key
+        brand: "Nestlé",
+        logo: "N",
+        logoBg: "bg-red-600",
+        trustScore: 4.7,
+        verified: true,
+        spaceId: b.spaceId || b.id,
+        requestedDates: campaignData.month || "Jun 1 – Aug 31, 2026",
+        durationMonths: duration,
+        offeredPrice: b.price,
+        pricePerMonth: Math.round(b.price / duration),
+        productName: campaignData.productName || "Product Launch",
+        status: "Pending",
+        type: "regular",
+        time: "Just now",
+        contractSignedByBrand: false,
+        contractSignedByShopkeeper: false,
+        proofs: [],
+        timelineStep: 0,
+        counterHistory: [],
+        campaignId: newCamp.id
+      };
+      setRequests(prev => [newReq, ...prev]);
+    });
+  };
+
   const sendRequest = (reqData) => {
     addRequest({ ...reqData, isAdvance: false });
   };
@@ -586,6 +632,11 @@ export function CompanyProvider({ children }) {
   React.useEffect(() => {
     localStorage.setItem('spacelo_requests', JSON.stringify(requests));
   }, [requests]);
+
+  // Sync Campaigns to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('spacelo_campaigns', JSON.stringify(campaigns));
+  }, [campaigns]);
 
   // Sync dynamic spaces from shopkeeper listings in localStorage
   React.useEffect(() => {
@@ -717,7 +768,8 @@ export function CompanyProvider({ children }) {
       setRecentlyViewed,
       availableChains,
       sendRequest,
-      sendAdvanceRequest
+      sendAdvanceRequest,
+      createCampaign
     }}>
       {children}
     </CompanyContext.Provider>
